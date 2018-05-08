@@ -13,8 +13,26 @@ Loc::loadMessages(__FILE__);
  */
 class ylab_ddata extends CModule
 {
-    public $exclusionAdminFiles;
-    public $orm_tables;
+    /**
+     * @var string Код модуля
+     */
+    public $MODULE_ID = 'ylab.ddata';
+    /**
+     * @var array Исключения при копировании файлов административного раздела
+     */
+    public $arExclusionAdminFiles = [
+        '..',
+        '.',
+        'menu.php',
+        'fragments'
+    ];
+    /**
+     * @var array Namespace классов с таблицами
+     */
+    public $arOrmTables = [
+        "\Ylab\Ddata\Orm\EntityUnitProfileTable",
+        "\Ylab\Ddata\Orm\DataUnitOptionsTable",
+    ];
 
     /**
      * ylab_ddata constructor.
@@ -30,19 +48,6 @@ class ylab_ddata extends CModule
             $this->MODULE_VERSION_DATE = $arModuleVersion['VERSION_DATE'];
         }
 
-        $this->exclusionAdminFiles = [
-            '..',
-            '.',
-            'menu.php',
-            'fragments'
-        ];
-
-        $this->orm_tables = [
-            "\Ylab\Ddata\Orm\EntityUnitProfileTable",
-            "\Ylab\Ddata\Orm\DataUnitOptionsTable",
-        ];
-
-        $this->MODULE_ID = 'ylab.ddata';
         $this->MODULE_NAME = Loc::getMessage('YLAB_DDATA_MODULE_NAME');
         $this->MODULE_DESCRIPTION = Loc::getMessage('YLAB_DDATA_MODULE_DESCRIPTION');
         $this->MODULE_GROUP_RIGHTS = 'N';
@@ -92,7 +97,7 @@ class ylab_ddata extends CModule
     {
         Loader::includeModule($this->MODULE_ID);
 
-        foreach ($this->orm_tables as $table) {
+        foreach ($this->arOrmTables as $table) {
             if (!Application::getConnection()->isTableExists(Base::getInstance($table)->getDBTableName())) {
                 Base::getInstance($table)->createDbTable();
             }
@@ -107,21 +112,20 @@ class ylab_ddata extends CModule
     {
         Loader::includeModule($this->MODULE_ID);
 
-        foreach ($this->orm_tables as $table) {
+        foreach ($this->arOrmTables as $table) {
             Application::getConnection()->queryExecute('DROP TABLE IF EXISTS ' . Base::getInstance($table)->getDBTableName());
         }
     }
 
     /**
      * @param array $arParams
-     * @return bool|void
      */
     public function InstallFiles($arParams = array())
     {
         if (\Bitrix\Main\IO\Directory::isDirectoryExists($path = $this->GetPath() . '/admin')) {
             if ($dir = opendir($path)) {
                 while (false !== $item = readdir($dir)) {
-                    if (in_array($item, $this->exclusionAdminFiles)) {
+                    if (in_array($item, $this->arExclusionAdminFiles)) {
                         continue;
                     }
                     file_put_contents($_SERVER['DOCUMENT_ROOT'] . '/bitrix/admin/' . $this->MODULE_ID . '_' . $item,
@@ -136,12 +140,10 @@ class ylab_ddata extends CModule
                 $_SERVER["DOCUMENT_ROOT"] . "/bitrix/themes/" . $this->MODULE_ID,
                 true, true);
         }
-
-        return true;
     }
 
     /**
-     * @return bool|void
+     * {@inheritdoc}
      */
     public function UnInstallFiles()
     {
@@ -150,7 +152,7 @@ class ylab_ddata extends CModule
                 $_SERVER["DOCUMENT_ROOT"] . '/bitrix/admin');
             if ($dir = opendir($path)) {
                 while (false !== $item = readdir($dir)) {
-                    if (in_array($item, $this->exclusionAdminFiles)) {
+                    if (in_array($item, $this->arExclusionAdminFiles)) {
                         continue;
                     }
                     \Bitrix\Main\IO\File::deleteFile($_SERVER['DOCUMENT_ROOT'] . '/bitrix/admin/' . $this->MODULE_ID . '_' . $item);
@@ -163,7 +165,5 @@ class ylab_ddata extends CModule
             DeleteDirFiles($_SERVER["DOCUMENT_ROOT"] . $this->GetPath() . '/assets/',
                 $_SERVER["DOCUMENT_ROOT"] . '/bitrix/themes/' . $this->MODULE_ID);
         }
-
-        return true;
     }
 }
