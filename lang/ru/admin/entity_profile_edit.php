@@ -12,3 +12,4 @@ $MESS['YLAB_DDATA_TAB_CHOOSE_VALUE'] = "Выберите тип значения
 $MESS['YLAB_DDATA_FIELD_PROFILE_NAME'] = "Название профиля";
 $MESS['YLAB_DDATA_FIELD_PROFILE_XML_ID'] = "Внешний код";
 $MESS['YLAB_DDATA_FIELD_PROFILE_BUTTON'] = "Нажмите для детального редактирования";
+$MESS['YLAB_DDATA_GEN'] = 'Генерировать';

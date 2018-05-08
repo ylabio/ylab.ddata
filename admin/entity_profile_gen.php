@@ -1,10 +1,12 @@
 <?php
-global $APPLICATION;
 require_once($_SERVER["DOCUMENT_ROOT"] . "/bitrix/modules/main/include/prolog_admin_before.php");
 
 use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
 use Ylab\Ddata\LoadUnits;
+
+/** @var \CMain $APPLICATION */
+global $APPLICATION;
 
 try {
     Loc::loadMessages(__FILE__);
@@ -133,8 +135,6 @@ CJSCore::Init(['WindowEntityProfileGen']);
            id="ajax-path">
     <?
     $tabControl->Begin();
-    ?>
-    <?
     $tabControl->BeginNextTab();
     ?>
     <? if (!empty($iProfileID)): ?>
@@ -202,8 +202,6 @@ CJSCore::Init(['WindowEntityProfileGen']);
     </tr>
     <?
     $tabControl->BeginNextTab();
-    ?>
-    <?
     $tabControl->Buttons();
     ?>
     <input type="button"
@@ -222,9 +220,7 @@ CJSCore::Init(['WindowEntityProfileGen']);
            value="<?= Loc::getMessage('YLAB_DDATA_GENERATE_BUTTON_CANCEL') ?>"
            onclick="window.location.replace('ylab.ddata_entity_profile_list.php?lang=<?= LANG ?>')"
     >
-    <?
-    $tabControl->End();
-    ?>
+    <? $tabControl->End(); ?>
 </form>
 
 

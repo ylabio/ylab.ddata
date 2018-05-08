@@ -4,12 +4,15 @@ require_once($_SERVER["DOCUMENT_ROOT"] . "/bitrix/modules/main/include/prolog_ad
 use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
 
+/** @var \CMain $APPLICATION */
+global $APPLICATION;
+
 try {
     Loc::loadMessages(__FILE__);
 
     define('MODULE_ID', 'ylab.ddata');
     Loader::includeModule(MODULE_ID);
-    global $APPLICATION;
+
     $POST_RIGHT = $APPLICATION->GetGroupRight(MODULE_ID);
     if ($POST_RIGHT == "D") {
         $APPLICATION->AuthForm(Loc::getMessage('YLAB_DDATA_ACCESS_DENIED'));
