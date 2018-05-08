@@ -71,7 +71,7 @@ class ylab_ddata extends CModule
     /**
      * @throws \Bitrix\Main\LoaderException
      */
-    public function doInstall()
+    public function DoInstall()
     {
         ModuleManager::registerModule($this->MODULE_ID);
         $this->installDB();
@@ -82,7 +82,7 @@ class ylab_ddata extends CModule
      * @throws \Bitrix\Main\Db\SqlQueryException
      * @throws \Bitrix\Main\LoaderException
      */
-    public function doUninstall()
+    public function DoUninstall()
     {
         $this->uninstallDB();
         $this->UnInstallFiles();
