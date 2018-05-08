@@ -94,11 +94,6 @@ try {
             global $$f;
         }
 
-        /*
-           здесь проверяем значения переменных $find_имя и, в случае возникновения ошибки,
-           вызываем $lAdmin->AddFilterError("текст_ошибки").
-        */
-
         return count($lAdmin->arFilterErrors) == 0; // если ошибки есть, вернем false;
     }
 
@@ -118,13 +113,6 @@ try {
                 $arFilter[$filter] = $setFilter[$value];
             }
         }
-    }
-
-    // сохранение отредактированных элементов
-    if ($lAdmin->EditAction() && $POST_RIGHT == "W") {
-    }
-    // обработка одиночных и групповых действий
-    if (($arID = $lAdmin->GroupAction()) && $POST_RIGHT == "W") {
     }
 
     $arTableHeaders = [
