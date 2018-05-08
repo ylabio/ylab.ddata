@@ -60,7 +60,7 @@ if (isset($error)) {
         });
 
         var saveBtn = {
-            title: "Сохранить",
+            title: "<?= Loc::getMessage('YLAB_DDATA_BTN_JS_SAVE')?>",
             id: "savebtn",
             name: "savebtn",
             className: "adm-btn-save",

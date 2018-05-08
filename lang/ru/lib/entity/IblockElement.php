@@ -1,7 +1,6 @@
 <?php
 $MESS['YLAB_DDATA_IBELEM_ENTITY_NAME'] = "Элемент инфоблока";
 $MESS['YLAB_DDATA_IBELEM_ENTITY_DESCRIPTION'] = "Элемент инфоблока";
-
 $MESS['YLAB_DDATA_IBELEM_FIELD_CODE'] = "Символьный код (CODE)";
 $MESS['YLAB_DDATA_IBELEM_FIELD_NAME'] = "Имя элемента (NAME)";
 $MESS['YLAB_DDATA_IBELEM_FIELD_TIMESTAMP_X'] = "Временная метка(TIMESTAMP_X)";

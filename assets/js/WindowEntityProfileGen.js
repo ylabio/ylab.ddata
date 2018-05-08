@@ -6,7 +6,7 @@ var bSubmit;
 var clean_test_table = '<div style="height: 200px; overflow: scroll">' +
     '<table id="result_table" cellpadding="0" cellspacing="0" border="0" width="100%" class="internal">' +
     '<tr class="heading">' +
-    '<td>Текущее действие</td>' +
+    '<td>' + BX.message('YLAB_DDATA_CURRENT_ACTION') + '</td>' +
     '<td width="1%">&nbsp;</td>' +
     '</tr>' +
     '</table>' +
@@ -23,7 +23,7 @@ function set_start(val) {
     if (val) {
         ShowWaitWindow();
         document.getElementById('result').innerHTML = clean_test_table;
-        document.getElementById('status').innerHTML = 'Выполняется...';
+        document.getElementById('status').innerHTML = BX.message('YLAB_DDATA_RUN');
 
         document.getElementById('percent').innerHTML = '0%';
         document.getElementById('indicator').style.width = '0%';
@@ -52,7 +52,7 @@ function work_onload(result) {
             document.getElementById('percent').innerHTML = iPercent + '%';
             document.getElementById('indicator').style.width = iPercent + '%';
 
-            document.getElementById('status').innerHTML = 'Выполняется...';
+            document.getElementById('status').innerHTML = BX.message('YLAB_DDATA_RUN');
             if (strCurrentAction != 'null') {
                 oTable = document.getElementById('result_table');
                 oRow = oTable.insertRow(-1);
@@ -78,7 +78,7 @@ function work_onload(result) {
         document.getElementById('result').setAttribute('style', 'display:none');
         document.getElementById('progress').setAttribute('style', 'display:none');
         if (e == "") {
-            alert('Сбой в получении данных');
+            alert(BX.message('YLAB_DDATA_ERROR_DATA'));
         } else {
             alert(e);
         }

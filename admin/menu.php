@@ -15,7 +15,7 @@ function YlabDdataMenu(&$adminMenu, &$moduleMenu)
     $adminMenu['global_menu_services']['items'][] = [
         "section" => "ylab-ddata",
         "sort" => 110,
-        "text" => 'Ylab Демо данные',
+        "text" => Loc::getMessage('YLAB_DDATA_MENU_TEXT'),
         "icon" => "ylab-ddata-icon",
         "page_icon" => "ylab-ddata-icon",
         "items_id" => "ylab-ddata",

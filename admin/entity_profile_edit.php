@@ -10,7 +10,10 @@ try {
 
     define('MODULE_ID', 'ylab.ddata');
     Loader::includeModule(MODULE_ID);
+
+    /** @var \CMain $APPLICATION */
     global $APPLICATION;
+
     $POST_RIGHT = $APPLICATION->GetGroupRight(MODULE_ID);
     if ($POST_RIGHT == "D") {
         $APPLICATION->AuthForm(Loc::getMessage('YLAB_DDATA_ACCESS_DENIED'));
@@ -284,9 +287,7 @@ CJSCore::Init(['WindowEntityDataForm']);
         )
     );
     ?>
-    <input name="generate" value="Генерировать" class="adm-btn-save" title="Генерировать" type="submit">
-    <?
-    $tabControl->End();
-    ?>
+    <input name="generate" value="<?= Loc::getMessage('YLAB_DDATA_GEN')?>" class="adm-btn-save" title="<?= Loc::getMessage('YLAB_DDATA_GEN')?>" type="submit">
+    <? $tabControl->End(); ?>
 </form>
 <? require($_SERVER["DOCUMENT_ROOT"] . "/bitrix/modules/main/include/epilog_admin.php"); ?>
