@@ -19,6 +19,7 @@ class RandomInteger extends DataUnitClass
 
     protected $iMin = 0;
     protected $iMax = 9999;
+    protected $iUserNumber = null;
 
     /**
      * RandomInteger constructor.
@@ -26,6 +27,8 @@ class RandomInteger extends DataUnitClass
      * @param $sFieldCode
      * @param $sGeneratorID
      * @throws \Bitrix\Main\ArgumentException
+     * @throws \Bitrix\Main\ObjectPropertyException
+     * @throws \Bitrix\Main\SystemException
      */
     public function __construct($sProfileID, $sFieldCode, $sGeneratorID)
     {
@@ -39,6 +42,10 @@ class RandomInteger extends DataUnitClass
 
         if (!empty($this->options['max'])) {
             $this->iMax = $this->options['max'];
+        }
+
+        if (!empty($this->options['user-number'])) {
+            $this->iUserNumber = $this->options['user-number'];
         }
     }
 
@@ -58,8 +65,10 @@ class RandomInteger extends DataUnitClass
 
     /**
      * @param HttpRequest $request
-     * @return string
+     * @return mixed|string
      * @throws \Bitrix\Main\ArgumentException
+     * @throws \Bitrix\Main\ObjectPropertyException
+     * @throws \Bitrix\Main\SystemException
      */
     public static function getOptionForm(HttpRequest $request)
     {
@@ -107,6 +116,10 @@ class RandomInteger extends DataUnitClass
     public function getValue()
     {
         if (!self::$bCheckStaticMethod) {
+            if ($this->iUserNumber) {
+                return $this->iUserNumber;
+            }
+
             return rand($this->iMin, $this->iMax);
         } else {
             throw new \Exception(Loc::getMessage('YLAB_DDATA_DATA_UNIT_INTEGER_EXCEPTION_STATIC'));

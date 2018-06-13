@@ -3,6 +3,7 @@ require_once($_SERVER["DOCUMENT_ROOT"] . "/bitrix/modules/main/include/prolog_ad
 
 use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
+use Ylab\Ddata\Interfaces\DeleteDataClass;
 use Ylab\Ddata\LoadUnits;
 
 try {
@@ -39,7 +40,7 @@ try {
     if (
         $request->getRequestMethod() == "POST" // проверка метода вызова страницы
         &&
-        ($save != "" || $apply != "" || $generate != "") // проверка нажатия кнопок "Сохранить" и "Применить" и "Генерировать"
+        ($save != "" || $apply != "" || $generate != "" || $delete != "") // проверка нажатия кнопок "Сохранить" и "Применить" и "Генерировать"
         &&
         $POST_RIGHT == "W"          // проверка наличия прав на запись для модуля
         &&
@@ -60,6 +61,9 @@ try {
             } else {
                 if (!empty($generate)) {
                     LocalRedirect("/bitrix/admin/ylab.ddata_entity_profile_gen.php?ID=" . $iProfileID . "&entity_id=" . $entityId . "&lang=" . LANGUAGE_ID);
+                } elseif (!empty($delete)) {
+                    $oGenDataClass = new DeleteDataClass();
+                    $oGenDataClass::deleteGenData($iProfileID);
                 }
             }
         }
@@ -68,6 +72,8 @@ try {
     if (!empty($iProfileID)) {
         $oEntity = new $arEntity['CLASS']($iProfileID);
         $arProfile = $oEntity->getProfile($iProfileID);
+        $oGenDataClass = new DeleteDataClass();
+        $arGenData = $oGenDataClass::getGenData($iProfileID);
     } else {
         $oEntity = new $arEntity['CLASS']();
     }
@@ -288,6 +294,18 @@ CJSCore::Init(['WindowEntityDataForm']);
     );
     ?>
     <input name="generate" value="<?= Loc::getMessage('YLAB_DDATA_GEN')?>" class="adm-btn-save" title="<?= Loc::getMessage('YLAB_DDATA_GEN')?>" type="submit">
+    <? if ($arGenData): ?>
+        <input name="delete" value="<?= Loc::getMessage('YLAB_DDATA_GENERATE_BUTTON_DELETE') ?>" type="submit">
+    <? endif; ?>
     <? $tabControl->End(); ?>
 </form>
+<?
+echo BeginNote();
+echo '<div style="display: inline-block; vertical-align: middle"><img width="64px" height="64px" src="' . \Ylab\Ddata\Helpers::getModulePath(true) . '/assets/images/ylab.ddata.jpg' . '" alt=""></div>';
+echo '<div style="display: inline-block; vertical-align: middle; margin-left: 5px">';
+echo Loc::getMessage('YLAB_DDATA_ADVERTISING_SITE');
+echo Loc::getMessage('YLAB_DDATA_ADVERTISING_GIT');
+echo '</div>';
+echo EndNote();
+?>
 <? require($_SERVER["DOCUMENT_ROOT"] . "/bitrix/modules/main/include/epilog_admin.php"); ?>

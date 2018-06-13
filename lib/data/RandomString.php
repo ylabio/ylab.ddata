@@ -21,6 +21,7 @@ class RandomString extends DataUnitClass
     protected $iMinLength = 6;
     protected $iMaxLength = 255;
     protected $sRegister = 'N';
+    protected $sUserString = '';
 
     /**
      * RandomString constructor.
@@ -28,6 +29,8 @@ class RandomString extends DataUnitClass
      * @param $sFieldCode
      * @param $sGeneratorID
      * @throws \Bitrix\Main\ArgumentException
+     * @throws \Bitrix\Main\ObjectPropertyException
+     * @throws \Bitrix\Main\SystemException
      */
     public function __construct($sProfileID, $sFieldCode, $sGeneratorID)
     {
@@ -49,6 +52,10 @@ class RandomString extends DataUnitClass
         if (!empty($this->options['register'])) {
             $this->sRegister = $this->options['register'];
         }
+
+        if (!empty($this->options['user-string'])) {
+            $this->sUserString = $this->options['user-string'];
+        }
     }
 
     /**
@@ -67,8 +74,10 @@ class RandomString extends DataUnitClass
 
     /**
      * @param HttpRequest $request
-     * @return string
+     * @return mixed|string
      * @throws \Bitrix\Main\ArgumentException
+     * @throws \Bitrix\Main\ObjectPropertyException
+     * @throws \Bitrix\Main\SystemException
      */
     public static function getOptionForm(HttpRequest $request)
     {
@@ -124,6 +133,9 @@ class RandomString extends DataUnitClass
     public function getValue()
     {
         if (!self::$bCheckStaticMethod) {
+            if ($this->sUserString) {
+                return $this->sUserString;
+            }
 
             $sLang = $this->sLang;
             $iMinLength = $this->iMinLength;

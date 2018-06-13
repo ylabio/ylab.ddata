@@ -10,3 +10,4 @@ $MESS['CHOOSE_REGISTER'] = 'Использовать регистр?';
 $MESS['REGISTER_NO'] = 'Нет';
 $MESS['REGISTER_UP'] = 'Верхний';
 $MESS['REGISTER_LOW'] = 'Нижний';
+$MESS['USER_STRING'] = 'Собственная строка';

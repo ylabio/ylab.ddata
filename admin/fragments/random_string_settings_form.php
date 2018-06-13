@@ -26,6 +26,7 @@ $sLang = $oData->sLang;
 $iMinLength = $oData->iMinLength;
 $iMaxLength = $oData->iMaxLength;
 $sRegister = $oData->sRegister;
+$sUserString = $oData->sUserString;
 ?>
 <script type='text/javascript'>
     BX.ready(function () {
@@ -59,11 +60,52 @@ $sRegister = $oData->sRegister;
                 }
             });
         }
+
+        /**
+         * Визуально отключаем настройки
+         * при заполнении собственной строки
+         */
+        var userParmas = BX.findChild(
+            document,
+            {
+                attribute: {
+                    'class': 'user-param'
+                }
+            },
+            true,
+            true
+        );
+        var userString = BX('user-string');
+        var userStringInput = BX.findChild(
+            userString,
+            {
+                attribute: {
+                    'name': 'option[user-string]'
+                }
+            },
+            true,
+            false
+        );
+
+        addOpacityTr(userParmas, userStringInput);
+        BX.bind(userStringInput, 'input', function () {
+            addOpacityTr(userParmas, this);
+        });
+
+        function addOpacityTr(array, userInput) {
+            array.forEach(function (tr) {
+                if (userInput.value) {
+                    BX.style(tr, 'opacity', '0.3');
+                } else {
+                    BX.style(tr, 'opacity', '1');
+                };
+            });
+        };
     });
 </script>
 <table class="adm-detail-content-table edit-table">
     <tbody>
-    <tr>
+    <tr class="user-param" style="<?= $sUserString ? "opacity: 0.3" : "" ?>">
         <td width="40%" class="adm-detail-content-cell-l">
             <?= Loc::getMessage('LANG') ?>
         </td>
@@ -75,7 +117,7 @@ $sRegister = $oData->sRegister;
             </select>
         </td>
     </tr>
-    <tr>
+    <tr class="user-param" style="<?= $sUserString ? "opacity: 0.3" : "" ?>">
         <td width="40%" class="adm-detail-content-cell-l">
             <?= Loc::getMessage('MIN_LENGTH') ?>
         </td>
@@ -83,7 +125,7 @@ $sRegister = $oData->sRegister;
             <input type="text" class="data-option" name="option[min]" value="<?= $iMinLength ?>"/>
         </td>
     </tr>
-    <tr>
+    <tr class="user-param" style="<?= $sUserString ? "opacity: 0.3" : "" ?>">
         <td width="40%" class="adm-detail-content-cell-l">
             <?= Loc::getMessage('MAX_LENGTH') ?>
         </td>
@@ -91,7 +133,7 @@ $sRegister = $oData->sRegister;
             <input type="text" class="data-option" name="option[max]" value="<?= $iMaxLength ?>"/>
         </td>
     </tr>
-    <tr>
+    <tr class="user-param" style="<?= $sUserString ? "opacity: 0.3" : "" ?>">
         <td width="40%" class="adm-detail-content-cell-l">
             <?= Loc::getMessage('CHOOSE_REGISTER') ?>
         </td>
@@ -101,6 +143,14 @@ $sRegister = $oData->sRegister;
                 <option value="UP" <?= $sLang == 'UP' ? 'selected' : '' ?> ><?= Loc::getMessage('REGISTER_UP') ?></option>
                 <option value="LOW" <?= $sLang == 'LOW' ? 'selected' : '' ?>><?= Loc::getMessage('REGISTER_LOW') ?></option>
             </select>
+        </td>
+    </tr>
+    <tr id="user-string">
+        <td width="40%" class="adm-detail-content-cell-l">
+            <?= Loc::getMessage('USER_STRING') ?>
+        </td>
+        <td width="60%" class="adm-detail-content-cell-r">
+            <input type="text" class="data-option" name="option[user-string]" value="<?= $sUserString ?>"/>
         </td>
     </tr>
     </tbody>

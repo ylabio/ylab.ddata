@@ -173,6 +173,8 @@ class RandomIBlockList extends DataUnitClass
      * @param $sProfileID
      * @return bool
      * @throws \Bitrix\Main\ArgumentException
+     * @throws \Bitrix\Main\ObjectPropertyException
+     * @throws \Bitrix\Main\SystemException
      */
     private function getIblockId($sProfileID)
     {

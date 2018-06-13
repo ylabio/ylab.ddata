@@ -24,21 +24,16 @@ foreach ($arClassesData as $arClass) {
 }
 
 $oData = new $arData['CLASS']($sProfileID, $sPropertyCode, $sGeneratorID);
-$arHLBlocks = $oData->arHLBlocks;
 
-$arFields = [];
 if ($oRequest->isPost()) {
-    if (!empty($arRequest['option']['hlblock'])) {
-        $arFields = $oData::getHLBlockFields($arRequest['option']['hlblock']);
-        if (isset($arRequest['option']['field']) && $arRequest['option']['field'] != "") {
-            $arFieldElements = $oData::getHLBlockElements($arRequest['option']['hlblock'], $arFields[$arRequest['option']['field']]);
-        }
+    if (isset($arRequest['option']['field']) && $arRequest['option']['field'] != "") {
+        $arFieldElements = $oData::getHLBlockElements($arRequest['option']['hlblock'],
+            $arRequest['option']['field']);
     }
 }
 
 if ($oRequest->isPost() && $arRequest['save-data']) {
     if (isset($arRequest['hlblock']) && $arRequest['hlblock'] != '') {
-        $arFields = $oData::getHLBlockFields($arRequest['hlblock']);
         $arFieldElements = $oData::getHLBlockElements($arRequest['hlblock'], $arRequest['field']);
 
         echo(json_encode([
@@ -66,13 +61,7 @@ if ($oRequest->isPost() && $arRequest['save-data']) {
 
             if (Object.keys(optionsValue).length !== 0) {
 
-                if (optionsValue.hlblock) {
-                    BX.style(BX('wr-fields-selector'), 'display', 'table-row');
-                }
-
-                if (optionsValue.field && optionsValue.elements) {
-                    BX.style(BX('wr-elements-selector'), 'display', 'table-row');
-                }
+                BX.style(BX('wr-elements-selector'), 'display', 'table-row');
 
                 var post = {},
                     action = window.YlabDdata.WindowEntityDataForm.PARAMS.content_url;
@@ -85,10 +74,9 @@ if ($oRequest->isPost() && $arRequest['save-data']) {
                     post,
                     function (data) {
                         var data = JSON.parse(data);
-
-                        var sSelectHtmlFeilds = '<option value="">--</option>';
+                        var sSelectHtmlFeilds = '';
                         for (var index in data.fields) {
-                            if (optionsValue.field != undefined && index == optionsValue.field) {
+                            if (index == optionsValue.field) {
                                 sSelectHtmlFeilds = sSelectHtmlFeilds + '<option value="' + index + '" selected>' + data.fields[index] + '</option>';
                             } else {
                                 sSelectHtmlFeilds = sSelectHtmlFeilds + '<option value="' + index + '">' + data.fields[index] + '</option>';
@@ -114,7 +102,6 @@ if ($oRequest->isPost() && $arRequest['save-data']) {
             }
         }
         if (inputOptions != undefined) {
-
             Object.keys(optionsValue).forEach(function (key, item) {
 
                 var optionsForm = BX.findChild(
@@ -157,6 +144,7 @@ if ($oRequest->isPost() && $arRequest['save-data']) {
     });
 </script>
 <table class="adm-detail-content-table edit-table">
+    <input type="hidden" name="option[hlblock]" value="<?=$iHLBlock?>">
     <tr>
         <td width="40%" class="adm-detail-content-cell-l">
             <?= Loc::getMessage('GENERATE_RANDOM') ?>
@@ -168,20 +156,7 @@ if ($oRequest->isPost() && $arRequest['save-data']) {
             </select>
         </td>
     </tr>
-    <tr>
-        <td width="40%" class="adm-detail-content-cell-l">
-            <?= Loc::getMessage('CHOOSE_HLBLOCK') ?>
-        </td>
-        <td width="60%" class="adm-detail-content-cell-r">
-            <select name="option[hlblock]" id="hlblock-selector" style="width: 50%;">
-                <option value="">--</option>
-                <? foreach ($arHLBlocks as $key => $arHLBlock): ?>
-                    <option value="<?= $arHLBlock['ID'] ?>" <?= ($arHLBlock['ID'] === $arRequest['option']['hlblock'] ? "selected" : "") ?>><?= $arHLBlock['NAME'] ?></option>
-                <? endforeach; ?>
-            </select>
-        </td>
-    </tr>
-    <tr style="<?= ($arFields ? "" : "display:none;") ?>" id="wr-fields-selector">
+    <tr id="wr-fields-selector">
         <td width="40%" class="adm-detail-content-cell-l">
             <?= Loc::getMessage('CHOOSE_FIELD') ?>
         </td>
@@ -213,32 +188,6 @@ if ($oRequest->isPost() && $arRequest['save-data']) {
     </tr>
 </table>
 <script>
-    BX.bind(BX('hlblock-selector'), 'change', function () {
-        var inputOptions = BX.findChild(
-            BX(document),
-            {
-                attribute: {
-                    'name': '<?= $sPropertyName ?>[<?= $sGeneratorID ?>]'
-                }
-            },
-            true,
-            false
-        );
-        var optionsValue = JSON.parse(inputOptions.value);
-
-        delete optionsValue.hlblock;
-        delete optionsValue.field;
-        delete optionsValue.elements;
-
-        inputOptions.value = JSON.stringify(optionsValue);
-
-        BX('fields-selector').innerHTML = '';
-        BX('elements-selector').innerHTML = '';
-        BX.style(BX('wr-fields-selector'), 'display', 'none');
-        BX.style(BX('wr-elements-selector'), 'display', 'none');
-
-        window.YlabDdata.WindowEntityDataForm.PostParameters();
-    });
     BX.bind(BX('fields-selector'), 'change', function () {
         var inputOptions = BX.findChild(
             BX(document),
