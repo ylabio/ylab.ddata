@@ -32,6 +32,7 @@ class ylab_ddata extends CModule
     public $arOrmTables = [
         "\Ylab\Ddata\Orm\EntityUnitProfileTable",
         "\Ylab\Ddata\Orm\DataUnitOptionsTable",
+        "\Ylab\Ddata\Orm\DataUnitGenElements"
     ];
 
     /**

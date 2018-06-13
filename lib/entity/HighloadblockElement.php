@@ -239,13 +239,22 @@ class HighloadblockElement extends EntityUnitClass
             $arLoadFields[$arField['FIELD_CODE']] = $arField['OBJECT']->getValue();
         }
 
-        $oResult = $oDataClass::add($arLoadFields);
-
-        if ($oResult->isSuccess()) {
-            $arResult['NEW_ELEMENT_ID'] = $oResult->getId();
-        } else {
-            $arResult['ERROR'] = $oResult->getErrorMessages();
+        try {
+            $oResult = $oDataClass::add($arLoadFields);
+        } catch (\Exception $e) {
+            $sError = $e->getMessage();
         }
+
+        if (empty($sError)) {
+            if ($oResult->isSuccess()) {
+                $arResult['NEW_ELEMENT_ID'] = $oResult->getId();
+            } else {
+                $arResult['ERROR'] = $oResult->getErrorMessages();
+            }
+        } else {
+            $arResult['ERROR'] = $sError;
+        }
+
 
         return $arResult;
     }

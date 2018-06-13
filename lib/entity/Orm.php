@@ -201,11 +201,20 @@ class Orm extends EntityUnitClass
         }
 
         $sOrmNamespace = $this->sOrmNamespace;
-        $oResult = $sOrmNamespace::add($arLoadFields);
-        if ($oResult->isSuccess()) {
-            $arResult['NEW_ELEMENT_ID'] = $oResult->getId();
+        try {
+            $oResult = $sOrmNamespace::add($arLoadFields);
+        } catch (\Exception $e) {
+            $sError = $e->getMessage();
+        }
+
+        if (empty($sError)) {
+            if ($oResult->isSuccess()) {
+                $arResult['NEW_ELEMENT_ID'] = $oResult->getId();
+            } else {
+                $arResult['ERROR'] = $oResult->getErrorMessages();
+            }
         } else {
-            $arResult['ERROR'] = $oResult->getErrorMessages();
+            $arResult['ERROR'] = $sError;
         }
 
         return $arResult;

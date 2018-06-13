@@ -43,7 +43,7 @@ class RandomDictionary extends DataUnitClass
         if (!empty($this->options['path'])) {
             $this->sDictionaryPath = $_SERVER['DOCUMENT_ROOT'] . $this->options['path'];
         } else {
-            $this->sDictionaryPath = Helpers::getModulePath() . '\assets\\';
+            $this->sDictionaryPath = Helpers::getModulePath() . '\assets\dictionary\ylab.dictionary.txt';
         }
         if (!empty($this->options['method'])) {
             $this->sMethod = $this->options['method'];
@@ -72,8 +72,10 @@ class RandomDictionary extends DataUnitClass
 
     /**
      * @param HttpRequest $request
-     * @return string
+     * @return mixed|string
      * @throws \Bitrix\Main\ArgumentException
+     * @throws \Bitrix\Main\ObjectPropertyException
+     * @throws \Bitrix\Main\SystemException
      */
     public static function getOptionForm(HttpRequest $request)
     {
@@ -148,5 +150,7 @@ class RandomDictionary extends DataUnitClass
         } else {
             throw new \Exception(Loc::getMessage('YLAB_DDATA_DATA_UNIT_DICTIONARY_EXCEPTION_STATIC'));
         }
+
+        return [];
     }
 }

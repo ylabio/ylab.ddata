@@ -28,6 +28,8 @@ class RandomEnumHL extends DataUnitClass
      * @param $sFieldCode
      * @param $sGeneratorID
      * @throws \Bitrix\Main\ArgumentException
+     * @throws \Bitrix\Main\ObjectPropertyException
+     * @throws \Bitrix\Main\SystemException
      */
     public function __construct($sProfileID, $sFieldCode, $sGeneratorID)
     {
@@ -70,9 +72,11 @@ class RandomEnumHL extends DataUnitClass
      * Метод возвращает html строку формы с настройкой генератора если таковые необходимы
      *
      * @param HttpRequest $request
-     * @return mixed
+     * @return mixed|string
      * @throws \Bitrix\Main\ArgumentException
      * @throws \Bitrix\Main\LoaderException
+     * @throws \Bitrix\Main\ObjectPropertyException
+     * @throws \Bitrix\Main\SystemException
      */
     public static function getOptionForm(HttpRequest $request)
     {

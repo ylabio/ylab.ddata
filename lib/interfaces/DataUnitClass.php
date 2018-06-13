@@ -26,6 +26,8 @@ abstract class DataUnitClass implements GenDataUnit
      * @param $sFieldCode
      * @param $sGeneratorID
      * @throws \Bitrix\Main\ArgumentException
+     * @throws \Bitrix\Main\ObjectPropertyException
+     * @throws \Bitrix\Main\SystemException
      */
     public function __construct($sProfileID, $sFieldCode, $sGeneratorID)
     {
@@ -87,11 +89,13 @@ abstract class DataUnitClass implements GenDataUnit
     }
 
     /**
-     * @param $sGeneratorID
      * @param $sProfileID
      * @param $sFieldCode
+     * @param $sGeneratorID
      * @return array|mixed
      * @throws \Bitrix\Main\ArgumentException
+     * @throws \Bitrix\Main\ObjectPropertyException
+     * @throws \Bitrix\Main\SystemException
      */
     public static function getOptions($sProfileID, $sFieldCode, $sGeneratorID)
     {

@@ -22,11 +22,13 @@ class RandomPassword extends DataUnitClass
     protected $iPasswordMaxLength = 12;
 
     /**
-     * Password constructor.
+     * RandomPassword constructor.
      * @param $sProfileID
      * @param $sFieldCode
      * @param $sGeneratorID
      * @throws \Bitrix\Main\ArgumentException
+     * @throws \Bitrix\Main\ObjectPropertyException
+     * @throws \Bitrix\Main\SystemException
      */
     public function __construct($sProfileID, $sFieldCode, $sGeneratorID)
     {
@@ -62,8 +64,10 @@ class RandomPassword extends DataUnitClass
 
     /**
      * @param HttpRequest $request
-     * @return string
+     * @return mixed|string
      * @throws \Bitrix\Main\ArgumentException
+     * @throws \Bitrix\Main\ObjectPropertyException
+     * @throws \Bitrix\Main\SystemException
      */
     public static function getOptionForm(HttpRequest $request)
     {

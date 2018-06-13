@@ -38,8 +38,10 @@ class Dictionary
 
     /**
      * @param array $parameters
-     * @return mixed
+     * @return array
      * @throws \Bitrix\Main\ArgumentException
+     * @throws \Bitrix\Main\ObjectPropertyException
+     * @throws \Bitrix\Main\SystemException
      */
     public static function getList($parameters = [])
     {
@@ -71,6 +73,8 @@ class Dictionary
     /**
      * @param array $parameters
      * @throws \Bitrix\Main\ArgumentException
+     * @throws \Bitrix\Main\ObjectPropertyException
+     * @throws \Bitrix\Main\SystemException
      */
     public static function delete($parameters = [])
     {

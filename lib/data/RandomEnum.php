@@ -23,11 +23,13 @@ class RandomEnum extends DataUnitClass
     protected $arAllValues = [];
 
     /**
-     * Enum constructor.
+     * RandomEnum constructor.
      * @param $sProfileID
      * @param $sFieldCode
      * @param $sGeneratorID
      * @throws \Bitrix\Main\ArgumentException
+     * @throws \Bitrix\Main\ObjectPropertyException
+     * @throws \Bitrix\Main\SystemException
      */
     public function __construct($sProfileID, $sFieldCode, $sGeneratorID)
     {
@@ -77,6 +79,8 @@ class RandomEnum extends DataUnitClass
      * @param HttpRequest $request
      * @return mixed|string
      * @throws \Bitrix\Main\ArgumentException
+     * @throws \Bitrix\Main\ObjectPropertyException
+     * @throws \Bitrix\Main\SystemException
      */
     public static function getOptionForm(HttpRequest $request)
     {

@@ -263,6 +263,9 @@ class IblockElement extends EntityUnitClass
                     case 'HTML':
                         $arItem['type'] = ["string"];
                         break;
+                    case 'directory':
+                        $arItem['type'] = ["dictionary"];
+                        break;
                     default:
                         $arItem['type'] = [];
                         break;

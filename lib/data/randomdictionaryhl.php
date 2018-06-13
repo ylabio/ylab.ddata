@@ -3,17 +3,19 @@
 namespace Ylab\Ddata\data;
 
 use Bitrix\Main\HttpRequest;
+use Bitrix\Main\Web\Json;
 use Ylab\Ddata\interfaces\DataUnitClass;
 use Bitrix\Main\Localization\Loc;
 use Ylab\Ddata\Helpers;
 use Bitrix\Main\Loader;
 use Bitrix\Highloadblock\HighloadBlockTable as HLBT;
+use Ylab\Ddata\Orm\EntityUnitProfileTable;
 
 /**
- * Class RandomHLElement
+ * Class RandomDictionaryHL
  * @package Ylab\Ddata\data
  */
-class RandomHLElement extends DataUnitClass
+class RandomDictionaryHL extends DataUnitClass
 {
     private static $bCheckStaticMethod = true;
 
@@ -23,14 +25,12 @@ class RandomHLElement extends DataUnitClass
     protected $arFieldSelectedElements = [];
 
     /**
-     * RandomHLElement constructor.
+     * RandomDictionaryHL constructor.
      * @param $sProfileID
      * @param $sFieldCode
      * @param $sGeneratorID
      * @throws \Bitrix\Main\ArgumentException
      * @throws \Bitrix\Main\LoaderException
-     * @throws \Bitrix\Main\ObjectPropertyException
-     * @throws \Bitrix\Main\SystemException
      */
     public function __construct($sProfileID, $sFieldCode, $sGeneratorID)
     {
@@ -38,14 +38,6 @@ class RandomHLElement extends DataUnitClass
 
         self::$bCheckStaticMethod = false;
         parent::__construct($sProfileID, $sFieldCode, $sGeneratorID);
-
-        $arHLBlocks = HLBT::getList([
-            'order' => 'NAME'
-        ])->fetchAll();
-
-        if (!empty($arHLBlocks)) {
-            $this->arHLBlocks = $arHLBlocks;
-        }
 
         if (!empty($this->options['random'])) {
             $this->sRandom = $this->options['random'];
@@ -63,7 +55,7 @@ class RandomHLElement extends DataUnitClass
             if ($this->sRandom === 'Y') {
                 $this->arFieldSelectedElements = static::getHLBlockElements($this->iHLBlock, '', false);
             } else {
-                $this->arFieldSelectedElements = $this->options['elements'];
+                $this->arFieldSelectedElements = static::getHLBlockElements($this->iHLBlock, '', false, $this->options['elements']);
             }
         }
     }
@@ -74,10 +66,10 @@ class RandomHLElement extends DataUnitClass
     public static function getDescription()
     {
         return [
-            "ID" => "hl.element",
-            "NAME" => Loc::getMessage("YLAB_DDATA_DATA_HL_ELEMENT_NAME"),
-            "DESCRIPTION" => Loc::getMessage('YLAB_DDATA_DATA_HL_ELEMENT_DESCRIPTION'),
-            "TYPE" => "hl.element",
+            "ID" => "dictionary.iblock",
+            "NAME" => Loc::getMessage("YLAB_DDATA_DATA_DICTIONARY_IBLOCK_NAME"),
+            "DESCRIPTION" => Loc::getMessage('YLAB_DDATA_DATA_DICTIONARY_IBLOCK_DESCRIPTION'),
+            "TYPE" => "dictionary",
             "CLASS" => __CLASS__
         ];
     }
@@ -86,11 +78,11 @@ class RandomHLElement extends DataUnitClass
      * @param HttpRequest $request
      * @return mixed|string
      * @throws \Bitrix\Main\ArgumentException
-     * @throws \Bitrix\Main\ObjectPropertyException
-     * @throws \Bitrix\Main\SystemException
      */
     public static function getOptionForm(HttpRequest $request)
     {
+        Loader::includeModule('iblock');
+        Loader::includeModule('highloadblock');
         $arRequest = $request->toArray();
         $arOptions = $arRequest['option'];
         $sGeneratorID = $request->get('generator');
@@ -102,8 +94,27 @@ class RandomHLElement extends DataUnitClass
         $sPropertyCode = $matches[2][0];
         $arOptions = array_merge(self::getOptions($sGeneratorID, $sProfileID, $sFieldID), $arOptions);
 
+        $iIblockID = $arRequest['prepare']['iblock_id'];
+        if(!empty($sProfileID)) {
+            $arProfile1 = EntityUnitProfileTable::getById($sProfileID)->fetch();
+            $arProfileOptions = Json::decode($arProfile1['OPTIONS']);
+            $iIblockID = $arProfileOptions['iblock_id'];
+        }
+
+        $oProperties = \CIBlockProperty::GetList([],
+            ["ACTIVE" => "Y", "IBLOCK_ID" => $iIblockID, 'CODE' => $sPropertyCode]);
+        $arProperty = [];
+        while ($arProperties = $oProperties->GetNext()) {
+            $sHLBTableName = $arProperties['USER_TYPE_SETTINGS']['TABLE_NAME'];
+        }
+        $arHLBlock = HLBT::getList([
+            'filter' => ['=TABLE_NAME' => $sHLBTableName]
+        ])->fetch();
+        $iHLBlock = $arHLBlock['ID'];
+        $arFields = static::getHLBlockFields($iHLBlock);
+
         ob_start();
-        include Helpers::getModulePath() . '/admin/fragments/random_hl_element_form.php';
+        include Helpers::getModulePath() . '/admin/fragments/random_dictionary_iblock_settings_form.php';
         $tpl = ob_get_contents();
         ob_end_clean();
 
@@ -120,9 +131,9 @@ class RandomHLElement extends DataUnitClass
 
         if ($arPrepareRequest) {
             $sRandom = $arPrepareRequest['random'];
-            $ihlblock = $arPrepareRequest['hlblock'];
 
-            if (!empty($sRandom) && !empty($ihlblock)) {
+            if (!empty($sRandom)) {
+
                 return true;
             }
         }
@@ -137,16 +148,13 @@ class RandomHLElement extends DataUnitClass
     public function getValue()
     {
         if (!self::$bCheckStaticMethod) {
-            if ($this->sRandom === 'Y') {
-                if ($this->arFieldSelectedElements) {
-                    return array_rand($this->arFieldSelectedElements);
-                }
-            } else {
+
                 if ($this->arFieldSelectedElements) {
                     $sResult = array_rand($this->arFieldSelectedElements);
+
                     return $this->arFieldSelectedElements[$sResult];
                 }
-            }
+
         } else {
             throw new \Exception(Loc::getMessage('YLAB_DDATA_DATA_HL_ELEMENT_EXCEPTION_STATIC'));
         }
@@ -157,8 +165,6 @@ class RandomHLElement extends DataUnitClass
      * @return array
      * @throws \Bitrix\Main\ArgumentException
      * @throws \Bitrix\Main\LoaderException
-     * @throws \Bitrix\Main\ObjectPropertyException
-     * @throws \Bitrix\Main\SystemException
      */
     public static function getHLBlockFields($iHLBlockId = 0)
     {
@@ -177,10 +183,10 @@ class RandomHLElement extends DataUnitClass
             foreach ($arHLBlocks as $arHLBlock) {
                 if ($iHLBlockId == $arHLBlock['ID']) {
                     $oBserFields = $USER_FIELD_MANAGER->GetUserFields('HLBLOCK_' . $arHLBlock['ID'], 0, LANGUAGE_ID);
-                    $arList[0] = 'ID';
+                    $arList['ID'] = 'ID';
                     foreach ($oBserFields as $arBserField) {
                         $fieldTitle = strlen($arBserField['LIST_COLUMN_LABEL']) ? $arBserField['LIST_COLUMN_LABEL'] : $arBserField['FIELD_NAME'];
-                        $arList[(int)$arBserField['ID']] = $fieldTitle;
+                        $arList[$arBserField['FIELD_NAME']] = $fieldTitle;
                     }
                 }
             }
@@ -194,12 +200,9 @@ class RandomHLElement extends DataUnitClass
      * @param string $sField
      * @param bool $bFullData
      * @return array
-     * @throws \Bitrix\Main\ArgumentException
      * @throws \Bitrix\Main\LoaderException
-     * @throws \Bitrix\Main\ObjectPropertyException
-     * @throws \Bitrix\Main\SystemException
      */
-    public static function getHLBlockElements($iHLBlockId = 0, $sField = '', $bFullData = true)
+    public static function getHLBlockElements($iHLBlockId = 0, $sField = '', $bFullData = true, $arElementsID = [])
     {
         Loader::includeModule('highloadblock');
 
@@ -208,7 +211,13 @@ class RandomHLElement extends DataUnitClass
         if ($iHLBlockId) {
             $sEntityDataClass = static::GetEntityDataClass($iHLBlockId);
 
+            if(!empty($arElementsID)) {
+                $arFilter = ['=ID' => $arElementsID];
+            } else {
+                $arFilter = [];
+            }
             $oData = $sEntityDataClass::getList([
+                'filter' => $arFilter,
                 'select' => ['*']
             ]);
             while ($arData = $oData->fetch()) {
@@ -216,10 +225,11 @@ class RandomHLElement extends DataUnitClass
                     $arList[] = [
                         'ID' => $arData['ID'],
                         'FIELD' => $sField,
-                        'VALUE' => $arData[$sField]
+                        'VALUE' => $arData[$sField],
+                        'XML_ID' => $arData['UF_XML_ID']
                     ];
                 } else {
-                    $arList[] = $arData['ID'];
+                    $arList[] = $arData['UF_XML_ID'];
                 }
             }
         }

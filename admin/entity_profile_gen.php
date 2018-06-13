@@ -3,6 +3,7 @@ require_once($_SERVER["DOCUMENT_ROOT"] . "/bitrix/modules/main/include/prolog_ad
 
 use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
+use Ylab\Ddata\Interfaces\DeleteDataClass;
 use Ylab\Ddata\LoadUnits;
 
 /** @var \CMain $APPLICATION */
@@ -43,6 +44,7 @@ try {
 
         if (!empty($iProfileIDAjax)) {
             $oEntity = new $arEntity['CLASS']($iProfileIDAjax);
+            $oGenDataClass = new DeleteDataClass();
         }
 
         $iLastCounter = $oRequest->get('lastcounter') > 0 ? $oRequest->get('lastcounter') : 0;
@@ -54,18 +56,19 @@ try {
             $arResult = $oEntity->genUnit();
             if (empty($arResult['ERROR'])) {
                 $arNewElements[] = $arResult['NEW_ELEMENT_ID'];
+                $oGenDataClass::setGenData($iProfileIDAjax, $sEntityIDAjax, $arResult['NEW_ELEMENT_ID']);
             } else {
-                $sError = $arResult['ERROR'];
+                $sErrors = $arResult['ERROR'];
             }
 
             $iLastCounter++;
             $iPercent = round(100 * ($iLastCounter / $iCountElements), 2);
             $sResult = '';
-            if (empty($sError)) {
+            if (empty($sErrors)) {
                 $sResult = Loc::getMessage('YLAB_DDATA_GENERATE_RESULT_SUCCESS',
                     ['#ELEMENTS#' => implode(", ", $arNewElements)]);
             } else {
-                $sResult = Loc::getMessage('YLAB_DDATA_GENERATE_RESULT_ERROR', ['#ERROR#' => implode(", ", $sError)]);
+                $sResult = Loc::getMessage('YLAB_DDATA_GENERATE_RESULT_ERROR', ['#ERROR#' => $sErrors]);
             }
 
             if (intval(time() - $iStart) == $iDuration) {
@@ -94,6 +97,8 @@ try {
     if (!empty($iProfileID)) {
         $oEntity = new $arEntity['CLASS']($iProfileID);
         $arProfile = $oEntity->getProfile($iProfileID);
+        $oGenDataClass = new DeleteDataClass();
+        $arGenData = $oGenDataClass::getGenData($iProfileID);
     }
     $arTabs = [
         [
@@ -220,8 +225,23 @@ CJSCore::Init(['WindowEntityProfileGen']);
            value="<?= Loc::getMessage('YLAB_DDATA_GENERATE_BUTTON_CANCEL') ?>"
            onclick="window.location.replace('ylab.ddata_entity_profile_list.php?lang=<?= LANG ?>')"
     >
+    <? if ($arGenData): ?>
+        <input type="button"
+               class="adm-btn-cancel"
+               value="<?= Loc::getMessage('YLAB_DDATA_GENERATE_BUTTON_DELETE') ?>"
+               onclick="window.location.replace('ylab.ddata_entity_profile_list.php?lang=<?= LANG ?>')"
+        >
+    <? endif; ?>
     <? $tabControl->End(); ?>
 </form>
-
+<?
+echo BeginNote();
+echo '<div style="display: inline-block; vertical-align: middle"><img width="64px" height="64px" src="' . \Ylab\Ddata\Helpers::getModulePath(true) . '/assets/images/ylab.ddata.jpg' . '" alt=""></div>';
+echo '<div style="display: inline-block; vertical-align: middle; margin-left: 5px">';
+echo Loc::getMessage('YLAB_DDATA_ADVERTISING_SITE');
+echo Loc::getMessage('YLAB_DDATA_ADVERTISING_GIT');
+echo '</div>';
+echo EndNote();
+?>
 
 <? require($_SERVER["DOCUMENT_ROOT"] . "/bitrix/modules/main/include/epilog_admin.php"); ?>

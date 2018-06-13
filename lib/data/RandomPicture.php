@@ -21,11 +21,13 @@ class RandomPicture extends DataUnitClass
     protected $iHeight = 100;
 
     /**
-     * Picture constructor.
+     * RandomPicture constructor.
      * @param $sProfileID
      * @param $sFieldCode
      * @param $sGeneratorID
      * @throws \Bitrix\Main\ArgumentException
+     * @throws \Bitrix\Main\ObjectPropertyException
+     * @throws \Bitrix\Main\SystemException
      */
     public function __construct($sProfileID, $sFieldCode, $sGeneratorID)
     {
@@ -57,8 +59,10 @@ class RandomPicture extends DataUnitClass
 
     /**
      * @param HttpRequest $request
-     * @return string
+     * @return mixed|string
      * @throws \Bitrix\Main\ArgumentException
+     * @throws \Bitrix\Main\ObjectPropertyException
+     * @throws \Bitrix\Main\SystemException
      */
     public static function getOptionForm(HttpRequest $request)
     {
