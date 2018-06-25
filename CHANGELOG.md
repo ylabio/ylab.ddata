@@ -2,6 +2,10 @@
 
 ## [Released]
 
+## [0.5.1] - 2018-06-25
+### Fix
+- ArgumentCountError Exception (php7.1)
+
 ## [0.5.0] - 2018-06-13
 ### Added
 - Стандартный загрузчик битрикс
