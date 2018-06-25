@@ -75,7 +75,7 @@ try {
         $oGenDataClass = new DeleteDataClass();
         $arGenData = $oGenDataClass::getGenData($iProfileID);
     } else {
-        $oEntity = new $arEntity['CLASS']();
+        $oEntity = new $arEntity['CLASS'](false);
     }
 
     $arEntityFields = $oEntity->getFields($request);
