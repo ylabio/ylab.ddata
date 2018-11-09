@@ -38,9 +38,10 @@ interface GenEntityUnit
      *
      * @param $arProfile - Содержит массив полей таблицы профиля см. EntityUnitProfile
      * @param $arFields - Содержит массив полей профиля в виде $arFields["Код поля"]["Id генератора"] => "Json строка опций генератора"
+     * @param $arCounts - Содержит массив полей кол-ва значений для множественных свойств вида $arCount["Код свойства"] => "Кол-во"
      * @return mixed
      */
-    public static function setProfile(array $arProfile, array $arFields);
+    public static function setProfile(array $arProfile, array $arFields, array $arCounts);
 
     /**
      * Метод возвращает профиль и его настройки полей

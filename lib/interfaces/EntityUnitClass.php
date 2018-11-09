@@ -37,10 +37,11 @@ abstract class EntityUnitClass implements GenEntityUnit
     /**
      * @param array $arProfile
      * @param array $arFields
+     * @param array $arCounts
      * @return int
-     * @throws \Exception
+     * @throws \Bitrix\Main\Db\SqlQueryException
      */
-    public static function setProfile(array $arProfile, array $arFields)
+    public static function setProfile(array $arProfile, array $arFields, array $arCounts)
     {
         $connection = Application::getConnection();
 
@@ -72,13 +73,20 @@ abstract class EntityUnitClass implements GenEntityUnit
             $arData = $objLoader->getDataUnits();
             foreach ($arFields as $sFieldCode => $arField) {
                 if (!is_array($arField)) {
+                    $sDataClass = $arData[0]['CLASS'];
+                    $sDataClass::deleteOptions($iProfileID, $sFieldCode);
                     continue;
                 }
                 $sDataId = (array_keys($arField)[0]);
                 $sDataOption = $arField[$sDataId];
                 $iDataIndex = array_search($sDataId, array_column($arData, 'ID'));
                 $sDataClass = $arData[$iDataIndex]['CLASS'];
-                $sDataClass::setOptions($iProfileID, $sFieldCode, $sDataId, $sDataOption);
+                if (!empty($arCounts) && array_key_exists($sFieldCode, $arCounts)) {
+                    $iCount = $arCounts[$sFieldCode];
+                    $sDataClass::setOptions($iProfileID, $sFieldCode, $sDataId, $sDataOption, $iCount);
+                } else {
+                    $sDataClass::setOptions($iProfileID, $sFieldCode, $sDataId, $sDataOption);
+                }
             }
         }
 

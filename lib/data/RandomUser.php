@@ -92,7 +92,7 @@ class RandomUser extends DataUnitClass
     public static function getOptionForm(HttpRequest $request)
     {
         $arRequest = $request->toArray();
-        $arOptions = $arRequest['option'];
+        $arOptions = (array)$arRequest['option'];
         $sGeneratorID = $arRequest['generator'];
         $sFieldCode = $arRequest['property-code'];
         $iProfileID = $arRequest['PROFILE']['ID'];

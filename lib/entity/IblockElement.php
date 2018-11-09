@@ -63,7 +63,6 @@ class IblockElement extends EntityUnitClass
         if (!empty($this->profile['FIELDS'])) {
             $arTmp = [];
             $arFields = self::getFields();
-
             foreach ($this->profile['FIELDS'] as $arField) {
                 if (isset($arFields['FIELDS'][$arField['FIELD_CODE']])) {
                     $arTmp['FIELDS'][$arField['FIELD_CODE']] = $arField;
@@ -71,7 +70,6 @@ class IblockElement extends EntityUnitClass
                     $arTmp['PROPERTIES'][$arField['FIELD_CODE']] = $arField;
                 }
             }
-
             $this->profile['FIELDS'] = $arTmp;
         }
     }
@@ -246,6 +244,7 @@ class IblockElement extends EntityUnitClass
             $arItem = &$arFields['PROPERTIES'][$arProperty['CODE']];
             $arItem['title'] = $arProperty['NAME'];
             $arItem['required'] = ($arProperty['IS_REQUIRED'] == 'Y');
+            $arItem['multiple'] = ($arProperty['MULTIPLE'] == 'Y');
             if ($arProperty['USER_TYPE']) {
                 switch ($arProperty['USER_TYPE']) {
                     case 'UserID':
@@ -319,8 +318,23 @@ class IblockElement extends EntityUnitClass
         }
         $arLoadFields['IBLOCK_ID'] = $this->iblock_id;
 
-        foreach ($arFieldsProfile['PROPERTIES'] as $arProfile) {
-            $arLoadProperties[$arProfile['FIELD_CODE']] = $arProfile['OBJECT']->getValue();
+        if (isset($arFieldsProfile['PROPERTIES'])) {
+            foreach ($arFieldsProfile['PROPERTIES'] as $arProfile) {
+                if ($arProfile['MULTIPLE'] == 'Y') {
+                    $arGeneratorDescription = $arProfile['OBJECT']->getDescription();
+                    if ($arGeneratorDescription['TYPE'] == 'file') {
+                        for ($iCount = 1; $iCount <= $arProfile['COUNT']; $iCount++) {
+                            $arLoadProperties[$arProfile['FIELD_CODE']]['n' . $iCount] = $arProfile['OBJECT']->getValue();
+                        }
+                    } else {
+                        for ($iCount = 1; $iCount <= $arProfile['COUNT']; $iCount++) {
+                            $arLoadProperties[$arProfile['FIELD_CODE']][] = $arProfile['OBJECT']->getValue();
+                        }
+                    }
+                } else {
+                    $arLoadProperties[$arProfile['FIELD_CODE']] = $arProfile['OBJECT']->getValue();
+                }
+            }
         }
 
         if (!empty($arLoadProperties)) {

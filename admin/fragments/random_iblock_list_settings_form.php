@@ -2,6 +2,7 @@
 /**
  * @global $arRequest
  * @global $arOptions
+ * @global $arItemList
  */
 
 use Bitrix\Main\Localization\Loc;

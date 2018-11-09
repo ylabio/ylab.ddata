@@ -88,6 +88,17 @@ BX.ready(function () {
                 true,
                 true
             )[0];
+            var multiPropertiesCount = BX.findChild(
+                BX(document),
+                {
+                    className: 'properties-count',
+                    attribute: {
+                        'data-name': this.getAttribute('name')
+                    }
+                },
+                true,
+                true
+            )[0];
             var selectName = this.getAttribute('name') + '[' + this.value + ']';
             if (inputHidden) {
                 BX.remove(inputHidden);
@@ -102,6 +113,14 @@ BX.ready(function () {
                         'id': this.value
                     }
                 }), BX.findParent(inputButton, {}));
+                if (multiPropertiesCount) {
+                    BX.style(multiPropertiesCount, 'display', 'table-cell');
+                }
+            } else {
+                if (multiPropertiesCount) {
+                    BX.style(multiPropertiesCount, 'display', 'none');
+                    multiPropertiesCount.value = '';
+                }
             }
         });
     }
@@ -128,8 +147,20 @@ BX.ready(function () {
         true
     )[0];
 
+    var generateBtn = BX.findChild(
+        document,
+        {
+            attribute: {
+                'name': 'generate'
+            }
+        },
+        true,
+        true
+    )[0];
+
     saveBtn.onclick = handlerClickBtnSettings;
     applyBtn.onclick = handlerClickBtnSettings;
+    generateBtn.onclick = handlerClickBtnSettings;
 
     function handlerClickBtnSettings() {
 
@@ -139,7 +170,7 @@ BX.ready(function () {
             document,
             {
                 attribute: {
-                    'required': ''
+                    'data-required': 'true'
                 }
             },
             true,
@@ -150,7 +181,7 @@ BX.ready(function () {
 
             if (!required[i].value) {
 
-                setTimeout(function () {
+                setTimeout(function (event) {
 
                     var loader = BX.findChild(
                         document,
@@ -175,7 +206,7 @@ BX.ready(function () {
                     BX.removeClass(_this, 'adm-btn-load');
                     _this.removeAttribute('disabled');
                 }, 100);
-
+                event.preventDefault();
                 break;
             }
         }

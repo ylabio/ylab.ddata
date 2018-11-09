@@ -3,15 +3,18 @@ require_once($_SERVER["DOCUMENT_ROOT"] . "/bitrix/modules/main/include/prolog_ad
 
 use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
+use Ylab\Ddata;
+
 
 /** @var \CMain $APPLICATION */
 global $APPLICATION;
 
 try {
-    Loc::loadMessages(__FILE__);
-
     define('MODULE_ID', 'ylab.ddata');
     Loader::includeModule(MODULE_ID);
+
+    Loc::loadMessages(__FILE__);
+    Loc::loadMessages(LANG_ROOT);
 
     $POST_RIGHT = $APPLICATION->GetGroupRight(MODULE_ID);
     if ($POST_RIGHT == "D") {
@@ -149,11 +152,23 @@ try {
     $arAdminContextMenu = [];
 
     if ($POST_RIGHT >= 'W') {
+
         $arAdminContextMenu[] = [
             "TEXT" => Loc::getMessage('YLAB_DDATA_ADMIN_ACTION_ADD_TEXT'),
             "TITLE" => Loc::getMessage('YLAB_DDATA_ADMIN_ACTION_ADD_TITLE'),
             "LINK" => "javascript:window.YlabDdata.WindowEntityPrepareForm.Show()",
             "ICON" => "btn_new"
+        ];
+        $arAdminContextMenu[] = [
+            "TEXT" => Loc::getMessage('YLAB_DDATA_ADMIN_ACTION_IMPORT_PROFILE_TEXT'),
+            "TITLE" => Loc::getMessage('YLAB_DDATA_ADMIN_ACTION_IMPORT_PROFILE_TITLE'),
+            "ICON" => "btn_new",
+            "HTML" => "<span id='import_profile' class='adm-btn adm-btn-save adm-btn-add'>
+                            " . Loc::getMessage('YLAB_DDATA_ADMIN_ACTION_IMPORT_PROFILE_TEXT') . "
+                            <form style='display: none;' action='ylab.ddata_import_profile.php' method='post' enctype='multipart/form-data'>
+                                <input name='file' type='file' id='import_profile_inp'>
+                            </form>
+                        </span>",
         ];
     }
 
@@ -220,6 +235,12 @@ try {
                     "delete-data")
         ];
 
+        $arActions[] = [
+            "ICON" => "",
+            "TEXT" => Loc::getMessage('YLAB_DDATA_ROW_ACTION_EXPORT_PROFILE'),
+            "ACTION" => $lAdmin->ActionRedirect('ylab.ddata_export_profile.php?lang=ru' . '&export_profile=' . $f_ID)
+        ];
+
         $row->AddActions($arActions);
     }
 
@@ -262,7 +283,26 @@ $oFilter = new CAdminFilter(
 );
 
 CJSCore::Init(array('WindowEntityPrepareForm'));
+CJSCore::Init(array('ImportProfile'));
 ?>
+
+
+<?
+$obRequest = \Bitrix\Main\Application::getInstance()->getContext()->getRequest();
+
+if ($obRequest->get('import_profile') == 'Y') {
+    ?>
+    <div class="adm-info-message"><?= Loc::getMessage('YLAB_DDATA_IMPORT_PROFILE_Y') ?></div>
+    <?
+}
+if ($obRequest->get('export_profile') == 'Y') {
+    ?>
+    <script>window.open("ylab.ddata_readfile.php?iIdProfile=<?=$obRequest->get('iIdProfile')?>");</script>
+    <div class="adm-info-message"><?= Loc::getMessage('YLAB_DDATA_EXPORT_PROFILE_Y') ?></div>
+    <?
+}
+?>
+
     <form name="find_form" method="get" action="<? echo $APPLICATION->GetCurPage(); ?>">
         <? $oFilter->Begin(); ?>
         <tr>
@@ -281,7 +321,8 @@ CJSCore::Init(array('WindowEntityPrepareForm'));
                 <select name="find_type">
                     <option value="">-</option>
                     <? foreach ($arTypes as $type): ?>
-                        <option value="<?= $type ?>" <?= ($type == $find_type ? "selected" : "") ?>><?= $type ?></option>
+                        <option
+                            value="<?= $type ?>" <?= ($type == $find_type ? "selected" : "") ?>><?= $type ?></option>
                     <? endforeach; ?>
                 </select>
             </td>
@@ -306,4 +347,5 @@ echo Loc::getMessage('YLAB_DDATA_ADVERTISING_GIT');
 echo '</div>';
 echo EndNote();
 ?>
+
 <? require($_SERVER["DOCUMENT_ROOT"] . "/bitrix/modules/main/include/epilog_admin.php"); ?>

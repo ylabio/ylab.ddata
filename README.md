@@ -1,15 +1,3 @@
-## Установка
-```
-$ cd local/modules
-$ git clone https://github.com/ylabio/ylab.ddata.git
-```
-В папку `local/modules` будет склонирован репозиторий модуля, после этого, необходимо в панели администратора установить 
-модуль: `Рабочий стол -> Marketplace -> Установленные решения`.
-
-##Требования
-1. Требуется версия 1С-Битрикс от 17.0.0.
-2. Требуется версия PHP >= 7.0
-
 ## Bitrix модуль генерации демо данных
 
 Модуль ylab.ddata реализует генерацию сущностей Bitrix заполненых случайными данными. Модуль поможет при отладке 
@@ -22,7 +10,32 @@ $ git clone https://github.com/ylabio/ylab.ddata.git
 * Сущности
     * Пользователь
     * Элемент инфоблока
+    * Элемент каталога
     * Элемент highload-блока
     * Элемент ORM сущности
 
 Настройка профиля производится в разделе `Рабочий стол  -> Сервисы -> Ylab Демо данные -> Профили сущностей`.
+
+## Требования
+1. Требуется версия 1С-Битрикс от 17.0.0.
+2. Требуется версия PHP >= 7.0
+
+## Установка
+```
+$ cd local/modules
+$ git clone https://github.com/ylabio/ylab.ddata.git
+```
+В папку `local/modules` будет склонирован репозиторий модуля, после этого, необходимо в панели администратора установить 
+модуль: `Рабочий стол -> Marketplace -> Установленные решения`.
+
+Ведущие разработчики: 
+
+- [Alexandr Zemlyanoy (Galamoon)](https://github.com/Galamoon)
+- [Roman Shvykov (shvykov)](https://github.com/shvykov)
+
+Разработчики:
+
+- [Vladimir Admaev (vladimiradmaev)](https://github.com/vladimiradmaev)
+- [Lev Dmitriev (LevDmitriev)](https://github.com/LevDmitriev)
+- [Anton (ivanovQQQ)](https://github.com/ivanovQQQ)
+

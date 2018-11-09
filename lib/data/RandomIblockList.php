@@ -2,6 +2,7 @@
 
 namespace Ylab\Ddata\Data;
 
+use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\Web\Json;
 use Bitrix\Main\HttpRequest;
@@ -19,9 +20,9 @@ class RandomIBlockList extends DataUnitClass
 {
     private static $bCheckStaticMethod = true;
 
-    protected $sRandom = 'N';
-    protected $arItemsRandom = '';
-    protected $arSelectedItems = '';
+    protected $sRandom = 'Y';
+    protected $arItemsRandom = [];
+    protected $arSelectedItems = [];
 
     /**
      * RandomIBlockList constructor.
@@ -46,6 +47,28 @@ class RandomIBlockList extends DataUnitClass
 
             if ($this->sRandom == 'Y') {
                 $iIblockId = static::getIblockId($sProfileID);
+                if (strpos($sFieldCode, "YLAB_DDATA_OFFER_") !== false) {
+                    Loader::includeModule('catalog');
+                    $sFieldCode = substr($sFieldCode, strlen("YLAB_DDATA_OFFER_"));
+                    $arOfferInfo = \CCatalogSKU::GetInfoByProductIBlock($iIblockId);
+                    $iIblockId = $arOfferInfo['IBLOCK_ID'];
+                }
+
+                if (empty($iIblockId)) {
+                    throw new \Exception(Loc::getMessage('YLAB_DDATA_DATA_IBLOCK_SECTION_EXCEPTION_IBLOC_ID'));
+                }
+
+                $this->arItemsRandom = static::getItemList($iIblockId, $sFieldCode);
+            }
+        } else {
+            if ($this->sRandom == 'Y') {
+                $iIblockId = static::getIblockId($sProfileID);
+                if (strpos($sFieldCode, "YLAB_DDATA_OFFER_") !== false) {
+                    Loader::includeModule('catalog');
+                    $sFieldCode = substr($sFieldCode, strlen("YLAB_DDATA_OFFER_"));
+                    $arOfferInfo = \CCatalogSKU::GetInfoByProductIBlock($iIblockId);
+                    $iIblockId = $arOfferInfo['IBLOCK_ID'];
+                }
 
                 if (empty($iIblockId)) {
                     throw new \Exception(Loc::getMessage('YLAB_DDATA_DATA_IBLOCK_SECTION_EXCEPTION_IBLOC_ID'));
@@ -78,7 +101,7 @@ class RandomIBlockList extends DataUnitClass
     public static function getOptionForm(HttpRequest $request)
     {
         $arRequest = $request->toArray();
-        $arOptions = $arRequest['option'];
+        $arOptions = (array)$arRequest['option'];
         $sGeneratorID = $request->get('generator');
         $sFieldID = $request->get('field');
         $sProfileID = $request->get('profile_id');
@@ -97,7 +120,15 @@ class RandomIBlockList extends DataUnitClass
             }
         }
 
-        $arItemList = static::getItemList($iIblockId, rtrim(ltrim($sPropertyName, "PROPERTIES["), "]"));
+        $iStartPropertyCount = strlen('PROPERTIES[');
+        $sPropertyCode = rtrim(substr($sPropertyName, $iStartPropertyCount), "]");
+        if (strpos($sPropertyCode, "YLAB_DDATA_OFFER_") !== false) {
+            Loader::includeModule('catalog');
+            $sPropertyCode = substr($sPropertyCode, strlen("YLAB_DDATA_OFFER_"));
+            $arOfferInfo = \CCatalogSKU::GetInfoByProductIBlock($iIblockId);
+            $iIblockId = $arOfferInfo['IBLOCK_ID'];
+        }
+        $arItemList = static::getItemList($iIblockId, $sPropertyCode);
 
         ob_start();
         include Helpers::getModulePath() . '/admin/fragments/random_iblock_list_settings_form.php';

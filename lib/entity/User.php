@@ -252,6 +252,7 @@ class User extends EntityUnitClass
             $arPropertyWithLang = $USER_FIELD_MANAGER->GetUserFields('USER', $arProperty['ID'], LANGUAGE_ID);
             $arItem['title'] = $arPropertyWithLang[$sPropertyCode]['EDIT_FORM_LABEL'];
             $arItem['required'] = ($arProperty['MANDATORY'] == 'Y');
+            $arItem['multiple'] = ($arProperty['MULTIPLE'] == 'Y');
 
             switch ($arProperty['USER_TYPE_ID']) {
                 case "string":
@@ -300,15 +301,26 @@ class User extends EntityUnitClass
         $arUserFields = [];
         $arResult = [];
 
-        foreach ($arFields as $arField) {
-            $arUserFields[$arField['FIELD_CODE']] = $arField['OBJECT']->getValue();
-            if ($arField['FIELD_CODE'] == 'PASSWORD') {
-                $arUserFields['CONFIRM_PASSWORD'] = $arUserFields['PASSWORD'];
+        if (isset($arFields)) {
+            foreach ($arFields as $arField) {
+                if ($arField['MULTIPLE'] == 'Y') {
+                    $arGeneratorDescription = $arField['OBJECT']->getDescription();
+                    if ($arGeneratorDescription['TYPE'] == 'file') {
+                        for ($iCount = 1; $iCount <= $arField['COUNT']; $iCount++) {
+                            $arUserFields[$arField['FIELD_CODE']]['n' . $iCount] = $arField['OBJECT']->getValue();
+                        }
+                    } else {
+                        for ($iCount = 1; $iCount <= $arField['COUNT']; $iCount++) {
+                            $arUserFields[$arField['FIELD_CODE']][] = $arField['OBJECT']->getValue();
+                        }
+                    }
+                } else {
+                    $arUserFields[$arField['FIELD_CODE']] = $arField['OBJECT']->getValue();
+                }
+                if ($arField['FIELD_CODE'] == 'PASSWORD') {
+                    $arUserFields['CONFIRM_PASSWORD'] = $arUserFields['PASSWORD'];
+                }
             }
-        }
-
-        foreach ($arProperties as $arProperty) {
-            $arUserFields[$arProperty['FIELD_CODE']] = $arProperty['OBJECT']->getValue();
         }
 
         $iNewUserID = $oUser->Add($arUserFields);

@@ -70,6 +70,14 @@ Loc::loadMessages(__FILE__);
     });
 </script>
 <table class="adm-detail-content-table edit-table">
+    <td colspan="2" align="center">
+
+        <div class="adm-info-message-wrap" align="center">
+            <div class="adm-info-message">
+                <p><?= Loc::getMessage("YLAB_DDATA_SECTION_GENERATE_HELP_MESSAGE") ?></p>
+            </div>
+        </div>
+    </td>
     <tr>
         <td width="40%" class="adm-detail-content-cell-l">
             <?= Loc::getMessage('GENERATE_RANDOM') ?>
