@@ -172,7 +172,7 @@ class HighloadblockElement extends EntityUnitClass
                     $type = ['integer'];
                     break;
                 case 'double' :
-                    $type = ['float'];
+                    $type = ['integer'];
                     break;
                 case 'datetime':
                 case 'date':
@@ -213,6 +213,7 @@ class HighloadblockElement extends EntityUnitClass
             $arFields['FIELDS'][$field['FIELD_NAME']] = [
                 'title' => $field['LANG_NAME'],
                 'required' => $field['MANDATORY'] == 'Y',
+                'multiple' => $field['MULTIPLE'] == 'Y',
                 'type' => $type
             ];
         }
@@ -236,7 +237,13 @@ class HighloadblockElement extends EntityUnitClass
         $arResult = [];
 
         foreach ($arFieldsProfile as $arField) {
-            $arLoadFields[$arField['FIELD_CODE']] = $arField['OBJECT']->getValue();
+            if ($arField['MULTIPLE'] == 'Y') {
+                for ($iCount = 1; $iCount <= $arField['COUNT']; $iCount++) {
+                    $arLoadFields[$arField['FIELD_CODE']][] = $arField['OBJECT']->getValue();
+                }
+            } else {
+                $arLoadFields[$arField['FIELD_CODE']] = $arField['OBJECT']->getValue();
+            }
         }
 
         try {

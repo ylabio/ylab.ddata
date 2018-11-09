@@ -10,10 +10,12 @@ use Ylab\Ddata\LoadUnits;
 global $APPLICATION;
 
 try {
-    Loc::loadMessages(__FILE__);
-
     define('MODULE_ID', 'ylab.ddata');
     Loader::includeModule(MODULE_ID);
+
+    Loc::loadMessages(__FILE__);
+    Loc::loadMessages(LANG_ROOT);
+
     $sPostRight = $APPLICATION->GetGroupRight(MODULE_ID);
     if ($sPostRight == "D") {
         $APPLICATION->AuthForm(Loc::getMessage('YLAB_DDATA_ACCESS_DENIED'));
@@ -76,7 +78,7 @@ try {
             }
         }
 
-        echo 'CurrentStatus = Array(' . $iPercent . ',"' . ($iPercent < 100 ? '&lastcounter=' . $iLastCounter : '') . '", "' . $sResult . '");';
+        echo "CurrentStatus = Array(" . $iPercent . ",'" . ($iPercent < 100 ? "&lastcounter=" . $iLastCounter : "") . "','" . $sResult . "');";
         die();
     }
 

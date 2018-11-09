@@ -60,4 +60,12 @@ interface GenDataUnit
      * @return mixed
      */
     public function getValue();
+
+    /**
+     * Удаление параметров типа данных
+     *
+     * @param $sProfileID
+     * @param $sFieldCode
+     */
+    public static function deleteOptions($sProfileID, $sFieldCode);
 }

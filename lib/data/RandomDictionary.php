@@ -43,7 +43,7 @@ class RandomDictionary extends DataUnitClass
         if (!empty($this->options['path'])) {
             $this->sDictionaryPath = $_SERVER['DOCUMENT_ROOT'] . $this->options['path'];
         } else {
-            $this->sDictionaryPath = Helpers::getModulePath() . '\assets\dictionary\ylab.dictionary.txt';
+            $this->sDictionaryPath = Helpers::getModulePath() . '/assets/dictionary/ylab.dictionary.txt';
         }
         if (!empty($this->options['method'])) {
             $this->sMethod = $this->options['method'];
@@ -80,7 +80,7 @@ class RandomDictionary extends DataUnitClass
     public static function getOptionForm(HttpRequest $request)
     {
         $arRequest = $request->toArray();
-        $arOptions = $arRequest['option'];
+        $arOptions = (array)$arRequest['option'];
         $sGeneratorID = $request->get('generator');
         $sFieldID = $request->get('field');
         $sProfileID = $request->get('profile_id');

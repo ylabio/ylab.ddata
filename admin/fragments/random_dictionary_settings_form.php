@@ -1,7 +1,8 @@
-<?
+<?php
 /**
  * @global $arRequest
  * @global $arOptions
+ * @global $sPropertyCode
  */
 
 use Bitrix\Main\Localization\Loc;
@@ -21,7 +22,7 @@ foreach ($arClassesData as $arClass) {
     }
 }
 
-$oData = new $arData['CLASS']();
+$oData = new $arData['CLASS']($sProfileID, $sPropertyCode, $sGeneratorID);
 $sMethod = $oData->sMethod;
 $sServerPath = str_replace("/", "\\", $_SERVER['DOCUMENT_ROOT']);
 $sPath = str_replace($sServerPath, "", $oData->sDictionaryPath);

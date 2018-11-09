@@ -1,4 +1,4 @@
-<?
+<?php
 /**
  * @global $arRequest
  * @global $arOptions

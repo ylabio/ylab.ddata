@@ -2,7 +2,6 @@
 if (!empty($iWidth) && !empty($iHeight)) {
 
     $arConfig = [
-        'font-path' => '../../assets/fonts/bellb.ttf',
         'offset-top' => 1,
         'offset-bottom' => 1,
         'offset-left' => 1,
@@ -42,32 +41,6 @@ if (!empty($iWidth) && !empty($iHeight)) {
 
         $x += $iColWidth;
     }
-
-    // Размещаем контейнер с текстом по середине изображения
-    $iWidthTextBox = $iWidth * 0.6;
-    $iHeightTextBox = $iHeight * 0.3;
-
-    $iXTextBox = ($iWidth / 2) - ($iWidthTextBox / 2);
-    $iYTextBox = ($iHeight / 2) - ($iHeightTextBox / 2);
-
-    $sImageTextBox = imagecreatetruecolor($iWidthTextBox, $iHeightTextBox);
-    imagefill($sImageTextBox, 0, 0, 0xFFFFFF);
-
-    $sRandomStringText = substr(base64_encode(md5(md5(uniqid()))), 0, $arConfig['colum-count']);
-    $iFontSizeText = $iHeightTextBox * 0.15;
-
-    $iTTFbboxText = imagettfbbox($iFontSizeText, 0, $arConfig['font-path'], $sRandomStringText);
-    $iTTFbboxTextWidth = abs($iTTFbboxText[4] - $iTTFbboxText[0]);
-    $iTTFbboxTextWHeight = abs($iTTFbboxText[5] - $iTTFbboxText[1]);
-
-    $iXText = ($iWidthTextBox / 2) - ($iTTFbboxTextWidth / 2);
-    $iYText = ($iHeightTextBox / 2) - ($iTTFbboxTextWHeight / 2);
-
-    imagefttext($sImageTextBox, $iFontSizeText, 0, $iXText, $iYText, imageColorAllocate(
-        $sImageTextBox, 0, 0, 0
-    ), $arConfig['font-path'], $sRandomStringText);
-
-    imagecopymerge($sImage, $sImageTextBox, $iXTextBox, $iYTextBox, 0, 0, $iWidthTextBox, $iHeightTextBox, 92);
 
     header('Content-type: image/png');
 

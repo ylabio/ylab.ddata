@@ -1,4 +1,7 @@
 <?php
+use Bitrix\Main\Localization\Loc;
+Loc::loadMessages(__FILE__);
+
 $arJsLibs = [
     'WindowEntityPrepareForm' => [
         'js' => '/bitrix/themes/ylab.ddata/js/WindowEntityPrepareForm.js',
@@ -14,9 +17,19 @@ $arJsLibs = [
         'js' => '/bitrix/themes/ylab.ddata/js/WindowEntityProfileGen.js',
         'lang' => '/bitrix/themes/ylab.ddata/lang/' . LANGUAGE_ID . '/WindowEntityProfileGen.php',
         'rel' => ['ajax', 'window']
+    ],
+    'ErrorChecking' => [
+        'js' => '/bitrix/themes/ylab.ddata/js/ErrorChecking.js'
+    ],
+    'ImportProfile' => [
+        'js' => '/bitrix/themes/ylab.ddata/js/ImportProfile.js',
+        'lang' => '/bitrix/themes/ylab.ddata/lang/' . LANGUAGE_ID . '/ImportProfile.php',
+        'rel' => ['ajax']
     ]
 ];
 
 foreach ($arJsLibs as $jsLib => $arJsLib) {
     CJSCore::RegisterExt($jsLib, $arJsLib);
 }
+
+define('LANG_ROOT', \Bitrix\Main\Application::getInstance()->getContext()->getServer()->getDocumentRoot() . \Ylab\Ddata\Helpers::getModulePath(true) . '/include.php');

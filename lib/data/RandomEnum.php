@@ -18,7 +18,7 @@ class RandomEnum extends DataUnitClass
      * @var bool
      */
     private static $bCheckStaticMethod = true;
-    protected $sRandom = 'N';
+    protected $sRandom = 'Y';
     protected $iSelectedValue = 0;
     protected $arAllValues = [];
 
@@ -85,7 +85,7 @@ class RandomEnum extends DataUnitClass
     public static function getOptionForm(HttpRequest $request)
     {
         $arRequest = $request->toArray();
-        $arOptions = $arRequest['option'];
+        $arOptions = (array)$arRequest['option'];
         $sGeneratorID = $request->get('generator');
         $sFieldID = $request->get('field');
         $sProfileID = $request->get('profile_id');

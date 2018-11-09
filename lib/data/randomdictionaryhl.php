@@ -45,6 +45,22 @@ class RandomDictionaryHL extends DataUnitClass
 
         if (!empty($this->options['hlblock'])) {
             $this->iHLBlock = $this->options['hlblock'];
+        } else {
+            if(!empty($sProfileID)) {
+                $arProfile = EntityUnitProfileTable::getById($sProfileID)->fetch();
+                $arProfileOptions = Json::decode($arProfile['OPTIONS']);
+                $iIblockID = $arProfileOptions['iblock_id'];
+            }
+
+            $oProperties = \CIBlockProperty::GetList([],
+                ["ACTIVE" => "Y", "IBLOCK_ID" => $iIblockID, 'CODE' => $sFieldCode]);
+            while ($arProperties = $oProperties->GetNext()) {
+                $sHLBTableName = $arProperties['USER_TYPE_SETTINGS']['TABLE_NAME'];
+            }
+            $arHLBlock = HLBT::getList([
+                'filter' => ['=TABLE_NAME' => $sHLBTableName]
+            ])->fetch();
+            $this->iHLBlock = $arHLBlock['ID'];
         }
 
         if (!empty($this->options['field'])) {
@@ -57,6 +73,8 @@ class RandomDictionaryHL extends DataUnitClass
             } else {
                 $this->arFieldSelectedElements = static::getHLBlockElements($this->iHLBlock, '', false, $this->options['elements']);
             }
+        } else {
+            $this->arFieldSelectedElements = static::getHLBlockElements($this->iHLBlock, '', false);
         }
     }
 
@@ -84,7 +102,7 @@ class RandomDictionaryHL extends DataUnitClass
         Loader::includeModule('iblock');
         Loader::includeModule('highloadblock');
         $arRequest = $request->toArray();
-        $arOptions = $arRequest['option'];
+        $arOptions = (array)$arRequest['option'];
         $sGeneratorID = $request->get('generator');
         $sFieldID = $request->get('field');
         $sProfileID = $request->get('profile_id');

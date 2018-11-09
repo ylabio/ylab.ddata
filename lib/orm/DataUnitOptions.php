@@ -49,6 +49,17 @@ class DataUnitOptionsTable extends Entity\DataManager
             ]),
             new Entity\TextField('OPTIONS', [
                 'required' => true,
+            ]),
+            new Entity\BooleanField('MULTIPLE', [
+                'values' => ['Y', 'N'],
+                'default_value' => 'N'
+            ]),
+            new Entity\IntegerField('COUNT', [
+                'validation' => function () {
+                    return [
+                        new Entity\Validator\Length(1, 255)
+                    ];
+                }
             ])
         ];
     }

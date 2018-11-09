@@ -82,7 +82,7 @@ class RandomString extends DataUnitClass
     public static function getOptionForm(HttpRequest $request)
     {
         $arRequest = $request->toArray();
-        $arOptions = $arRequest['option'];
+        $arOptions = (array)$arRequest['option'];
         $sGeneratorID = $request->get('generator');
         $sFieldID = $request->get('field');
         $sProfileID = $request->get('profile_id');

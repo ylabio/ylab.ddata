@@ -35,21 +35,24 @@ abstract class DataUnitClass implements GenDataUnit
     }
 
     /**
-     * @param $sGeneratorID
      * @param $sProfileID
      * @param $sFieldCode
+     * @param $sGeneratorID
      * @param $sJsonOptions
+     * @param int $iCount
      * @return array|bool|int
-     * @throws \Exception
+     * @throws \Bitrix\Main\ArgumentException
+     * @throws \Bitrix\Main\Db\SqlQueryException
+     * @throws \Bitrix\Main\ObjectPropertyException
+     * @throws \Bitrix\Main\SystemException
      */
-    public static function setOptions($sProfileID, $sFieldCode, $sGeneratorID, $sJsonOptions)
+    public static function setOptions($sProfileID, $sFieldCode, $sGeneratorID, $sJsonOptions, $iCount = 1)
     {
         $connection = Application::getConnection();
         $objOptionRow = DataUnitOptionsTable::getList([
             'filter' => [
                 'PROFILE_ID' => $sProfileID,
-                'FIELD_CODE' => $sFieldCode,
-                'DATA_ID' => $sGeneratorID
+                'FIELD_CODE' => $sFieldCode
             ]
         ]);
 
@@ -60,7 +63,9 @@ abstract class DataUnitClass implements GenDataUnit
                 'PROFILE_ID' => $sProfileID,
                 'FIELD_CODE' => $sFieldCode,
                 'DATA_ID' => $sGeneratorID,
-                'OPTIONS' => $sJsonOptions
+                'OPTIONS' => $sJsonOptions,
+                'MULTIPLE' => $iCount > 1 ? 'Y' : 'N',
+                'COUNT' => $iCount == 0 ? 1 : $iCount
             ]);
             if (!$bResult->isSuccess() && $bResult->getAffectedRowsCount() <= 0) {
                 $connection->rollbackTransaction();
@@ -75,7 +80,9 @@ abstract class DataUnitClass implements GenDataUnit
                 'PROFILE_ID' => $sProfileID,
                 'FIELD_CODE' => $sFieldCode,
                 'DATA_ID' => $sGeneratorID,
-                'OPTIONS' => $sJsonOptions
+                'OPTIONS' => $sJsonOptions,
+                'MULTIPLE' => $iCount > 1 ? 'Y' : 'N',
+                'COUNT' => $iCount == 0 ? 1 : $iCount
             ]);
             if (!$bResult->isSuccess()) {
                 $connection->rollbackTransaction();
@@ -116,5 +123,39 @@ abstract class DataUnitClass implements GenDataUnit
         }
 
         return [];
+    }
+
+    /**
+     * Удаление параметров типа данных
+     *
+     * @param $sProfileID
+     * @param $sFieldCode
+     * @throws \Bitrix\Main\ArgumentException
+     * @throws \Bitrix\Main\Db\SqlQueryException
+     * @throws \Bitrix\Main\ObjectPropertyException
+     * @throws \Bitrix\Main\SystemException
+     */
+    public static function deleteOptions($sProfileID, $sFieldCode)
+    {
+        $oConnection = Application::getConnection();
+
+        $objOptionRow = DataUnitOptionsTable::getList([
+            'filter' => [
+                'PROFILE_ID' => $sProfileID,
+                'FIELD_CODE' => $sFieldCode
+            ]
+        ]);
+
+        if ($objOptionRow->getSelectedRowsCount() > 0) {
+            $oConnection->startTransaction();
+            $arOptionRow = $objOptionRow->fetch();
+            $bResult = DataUnitOptionsTable::delete($arOptionRow['ID']);
+            if (!$bResult->isSuccess()) {
+                $oConnection->rollbackTransaction();
+                throw new \Exception(Loc::getMessage('YLAB_DDATA_DATA_UNIT_OPTION_ERR_DELETE',
+                        ['#FIELD_СODE#' => $sFieldCode]) . implode(",<br>", $bResult->getErrorMessages()));
+            }
+            $oConnection->commitTransaction();
+        }
     }
 }

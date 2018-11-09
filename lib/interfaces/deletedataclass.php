@@ -146,6 +146,28 @@ class DeleteDataClass implements DeleteGenData
                         $connection->commitTransaction();
                     }
                     break;
+                case "catalog-element":
+                    Loader::includeModule('catalog');
+                    Loader::includeModule('iblock');
+                    foreach ($arElementsID as $iElementID) {
+                        if (!\CPrice::DeleteByProduct($iElementID)) {
+                            $connection->rollbackTransaction();
+                            throw new \Exception(Loc::getMessage('YLAB_DDATA_DELETE_DATA_OPTION_ERR_DELETE',
+                                ['#ELEMENT_ID#' => $iElementID]));
+                        }
+                        if (!\Bitrix\Catalog\Model\Product::delete($iElementID)) {
+                            $connection->rollbackTransaction();
+                            throw new \Exception(Loc::getMessage('YLAB_DDATA_DELETE_DATA_OPTION_ERR_DELETE',
+                                ['#ELEMENT_ID#' => $iElementID]));
+                        }
+                        if (!\CIBlockElement::Delete($iElementID)) {
+                            $connection->rollbackTransaction();
+                            throw new \Exception(Loc::getMessage('YLAB_DDATA_DELETE_DATA_OPTION_ERR_DELETE',
+                                ['#ELEMENT_ID#' => $iElementID]));
+                        }
+                        $connection->commitTransaction();
+                    }
+                    break;
             }
 
             foreach ($arGenDataID as $iGenDataID) {

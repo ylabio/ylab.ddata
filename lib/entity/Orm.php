@@ -97,7 +97,11 @@ class Orm extends EntityUnitClass
         $arPrepareRequest = $oRequest->get('prepare');
 
         if (!empty($arPrepareRequest['namespace']) && class_exists($arPrepareRequest['namespace'], true)) {
-            return true;
+            $oCheckClass = new $arPrepareRequest['namespace'];
+            if($oCheckClass instanceof \Bitrix\Main\Entity\DataManager) {
+                
+                return true;
+            }
         }
 
         return false;
@@ -122,7 +126,7 @@ class Orm extends EntityUnitClass
             }
         }
 
-        if (!isset($sOrmNamespace)) {
+        if (!class_exists($sOrmNamespace)) {
             return [];
         }
 
@@ -201,6 +205,12 @@ class Orm extends EntityUnitClass
         }
 
         $sOrmNamespace = $this->sOrmNamespace;
+
+        if (!class_exists($sOrmNamespace)) {
+            $arResult['ERROR'] = Loc::getMessage('YLAB_DDATA_ORM_ENTITY_ERROR_EXIST_CLASS');
+            return $arResult;
+        }
+
         try {
             $oResult = $sOrmNamespace::add($arLoadFields);
         } catch (\Exception $e) {

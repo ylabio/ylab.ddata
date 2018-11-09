@@ -56,6 +56,17 @@ class RandomIBlockSection extends DataUnitClass
                     $this->arSectionsRandom = static::getSectionList($iIblockId);
                 }
             }
+        } else {
+            $iIblockId = static::getIblockId($sProfileID);
+            if (empty($iIblockId)) {
+                throw new \Exception(Loc::getMessage('YLAB_DDATA_DATA_IBLOCK_SECTION_EXCEPTION_IBLOC_ID'));
+            }
+
+            if (count($this->arSelectedSections) == 1) {
+                $this->arSectionsRandom = static::getSectionList($iIblockId, $this->arSelectedSections[0]);
+            } else {
+                $this->arSectionsRandom = static::getSectionList($iIblockId);
+            }
         }
     }
 
@@ -84,7 +95,7 @@ class RandomIBlockSection extends DataUnitClass
     {
 
         $arRequest = $request->toArray();
-        $arOptions = $arRequest['option'];
+        $arOptions = (array)$arRequest['option'];
         $sGeneratorID = $request->get('generator');
         $sFieldID = $request->get('field');
         $sProfileID = $request->get('profile_id');
@@ -148,7 +159,8 @@ class RandomIBlockSection extends DataUnitClass
         if (!self::$bCheckStaticMethod) {
             if ($this->sRandom === 'Y') {
                 if ($this->arSectionsRandom) {
-                    return array_rand($this->arSectionsRandom);
+                    $sResult = array_rand($this->arSectionsRandom);
+                    return $sResult;
                 }
             } else {
                 if ($this->arSelectedSections) {
