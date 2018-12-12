@@ -14,3 +14,6 @@ $MESS['YLAB_DDATA_GENERATE_DURATION'] = "Длительность шага";
 $MESS['YLAB_DDATA_GENERATE_DURATION_COUNT'] = " сек.";
 $MESS['YLAB_DDATA_GENERATE_RESULT_SUCCESS'] = 'Добавлены записи с ID #ELEMENTS#';
 $MESS['YLAB_DDATA_GENERATE_RESULT_ERROR'] = "Ошибка: #ERROR#', 'true";
+$MESS["YLAB_DDATA_GENERATE_DETAIL"] = "
+            Детальное отображение генерации:
+        ";
