@@ -12,10 +12,12 @@ var clean_test_table = '<div style="height: 200px; overflow: scroll">' +
     '</table>' +
     '</div>';
 
-function set_start(val) {
+function set_start(val, bDetail = true) {
     document.getElementById('work_start').disabled = val ? 'disabled' : '';
     document.getElementById('work_stop').disabled = val ? '' : 'disabled';
-    document.getElementById('progress').style.display = val ? 'block' : 'none';
+    if (bDetail) {
+        document.getElementById('progress').style.display = val ? 'block' : 'none';
+    }
     iCountElements = document.getElementById('count-elements').value;
     iDuration = document.getElementById('duration').value;
     sAjaxPath = document.getElementById('ajax-path').value;
@@ -23,16 +25,22 @@ function set_start(val) {
     if (val) {
         ShowWaitWindow();
         document.getElementById('result').innerHTML = clean_test_table;
+        if (!bDetail) {
+            document.getElementById('result').style.display = 'none';
+        } else {
+            document.getElementById('result').style.display = 'block';
+        }
         document.getElementById('status').innerHTML = BX.message('YLAB_DDATA_RUN');
 
         document.getElementById('percent').innerHTML = '0%';
         document.getElementById('indicator').style.width = '0%';
 
+
         CHttpRequest.Action = work_onload;
         CHttpRequest.Send(sAjaxPath + '&count=' + iCountElements + '&duration=' + iDuration);
-    }
-    else
+    } else {
         CloseWaitWindow();
+    }
 }
 
 function work_onload(result) {
@@ -42,7 +50,6 @@ function work_onload(result) {
         strNextRequest = CurrentStatus[1];
         strCurrentAction = CurrentStatus[2];
         bError = CurrentStatus[3];
-
         iCountElements = document.getElementById('count-elements').value;
         iDuration = document.getElementById('duration').value;
 
@@ -84,3 +91,13 @@ function work_onload(result) {
         }
     }
 }
+
+BX.ready(function () {
+    BX.bind(BX('detail'), 'change', function () {
+        if (this.checked) {
+            BX('work_start').setAttribute('onclick', 'set_start(1)');
+        } else {
+            BX('work_start').setAttribute('onclick', 'set_start(1, false)');
+        }
+    });
+});

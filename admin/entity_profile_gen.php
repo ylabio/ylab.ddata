@@ -207,6 +207,14 @@ CJSCore::Init(['WindowEntityProfileGen']);
                    value="20"> <?= Loc::getMessage('YLAB_DDATA_GENERATE_DURATION_COUNT') ?>
         </td>
     </tr>
+    <tr>
+        <td width="40%" class="adm-detail-content-cell-l">
+            <?= Loc::getMessage("YLAB_DDATA_GENERATE_DETAIL") ?>
+        </td>
+        <td class="adm-detail-content-cell-r">
+            <input type="checkbox" id="detail" name="detail" value="Y" checked>
+        </td>
+    </tr>
     <?
     $tabControl->BeginNextTab();
     $tabControl->Buttons();

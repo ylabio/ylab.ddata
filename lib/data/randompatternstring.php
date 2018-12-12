@@ -17,6 +17,7 @@ class RandomPatternString extends DataUnitClass
 {
     public static $bCheckStaticMethod = true;
     public static $sPattern = "/{([а-яА-ЯёЁa-zA-Z0-9|]+)}/ui";
+    public static $sExample = "Стол {красный|синий|белый} из {дерева|стекла|пластика}";
     public static $iMaxLength = 255;
 
     /**
@@ -97,9 +98,13 @@ class RandomPatternString extends DataUnitClass
     {
         if (!self::$bCheckStaticMethod) {
 
-            $sRes = $this->options['pattern'];
+            if (!empty($this->options['pattern'])) {
+                $sRes = $this->options['pattern'];
+            } else {
+                $sRes = self::$sExample;
+            }
 
-            if (preg_match_all(self::$sPattern, $this->options['pattern'], $matches)) {
+            if (preg_match_all(self::$sPattern, $sRes, $matches)) {
 
                 if ($matches[1]) {
 
