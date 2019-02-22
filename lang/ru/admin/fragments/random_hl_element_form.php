@@ -1,4 +1,4 @@
-<?
+<?php
 $MESS['GENERATE_RANDOM'] = 'Генерировать случайно';
 $MESS['CHOOSE_HLBLOCK'] = 'Выберите highload-блок';
 $MESS['RANDOM_VALUE_NO'] = 'Нет';

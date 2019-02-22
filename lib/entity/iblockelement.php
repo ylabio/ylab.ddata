@@ -2,16 +2,19 @@
 
 namespace Ylab\Ddata\Entity;
 
+use Bitrix\Main\Application;
 use Bitrix\Main\HttpRequest;
 use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
 use Ylab\Ddata\Interfaces\EntityUnitClass;
 use Ylab\Ddata\Helpers;
+use Ylab\Ddata\Orm\DataUnitGenElementsTable;
 
 Loc::loadMessages(__FILE__);
 
 /**
  * Class IblockElement
+ *
  * @package Ylab\Ddata\entity
  */
 class IblockElement extends EntityUnitClass
@@ -31,20 +34,22 @@ class IblockElement extends EntityUnitClass
      *
      * @return array
      */
-    public static function getDescription()
+    public function getDescription()
     {
         return [
-            "ID" => "iblock-element",
-            "NAME" => Loc::getMessage('YLAB_DDATA_IBELEM_ENTITY_NAME'),
-            "DESCRIPTION" => Loc::getMessage('YLAB_DDATA_IBELEM_ENTITY_DESCRIPTION'),
-            "TYPE" => "iblock",
-            "CLASS" => __CLASS__
+            'ID' => 'iblock-element',
+            'NAME' => Loc::getMessage('YLAB_DDATA_IBELEM_ENTITY_NAME'),
+            'DESCRIPTION' => Loc::getMessage('YLAB_DDATA_IBELEM_ENTITY_DESCRIPTION'),
+            'TYPE' => 'iblock',
+            'CLASS' => __CLASS__
         ];
     }
 
     /**
      * IblockElement constructor.
+     *
      * @param $iProfileID
+     *
      * @throws \Bitrix\Main\ArgumentException
      * @throws \Bitrix\Main\SystemException
      */
@@ -62,12 +67,14 @@ class IblockElement extends EntityUnitClass
 
         if (!empty($this->profile['FIELDS'])) {
             $arTmp = [];
-            $arFields = self::getFields();
+            $arFields = $this->getFields();
             foreach ($this->profile['FIELDS'] as $arField) {
                 if (isset($arFields['FIELDS'][$arField['FIELD_CODE']])) {
                     $arTmp['FIELDS'][$arField['FIELD_CODE']] = $arField;
-                } else if (isset($arFields['PROPERTIES'][$arField['FIELD_CODE']])) {
-                    $arTmp['PROPERTIES'][$arField['FIELD_CODE']] = $arField;
+                } else {
+                    if (isset($arFields['PROPERTIES'][$arField['FIELD_CODE']])) {
+                        $arTmp['PROPERTIES'][$arField['FIELD_CODE']] = $arField;
+                    }
                 }
             }
             $this->profile['FIELDS'] = $arTmp;
@@ -76,11 +83,13 @@ class IblockElement extends EntityUnitClass
 
     /**
      * @inheritdoc
+     *
      * @param HttpRequest $oRequest
+     *
      * @return string
      * @throws \Bitrix\Main\LoaderException
      */
-    public static function getPrepareForm(HttpRequest $oRequest)
+    public function getPrepareForm(HttpRequest $oRequest)
     {
         Loader::includeModule('iblock');
 
@@ -89,7 +98,7 @@ class IblockElement extends EntityUnitClass
         $obgIblockType = \CIBlockType::GetList();
         while ($IblockType = $obgIblockType->Fetch()) {
             $IblockType = \CIBlockType::GetByIDLang($IblockType["ID"], LANG);
-            $arIblockType[$IblockType["ID"]] = $IblockType['NAME'] . " [{$IblockType["ID"]}]";
+            $arIblockType[$IblockType['ID']] = $IblockType['NAME'] . " [{$IblockType["ID"]}]";
         }
 
         $arIblock = [];
@@ -101,7 +110,7 @@ class IblockElement extends EntityUnitClass
         }
 
         ob_start();
-        include Helpers::getModulePath() . "/admin/fragments/iblock_element_prepare_form.php";
+        include Helpers::getModulePath() . '/admin/fragments/iblock_element_prepare_form.php';
         $tpl = ob_get_contents();
         ob_end_clean();
 
@@ -110,10 +119,12 @@ class IblockElement extends EntityUnitClass
 
     /**
      * @inheritdoc
+     *
      * @param HttpRequest $oRequest
+     *
      * @return boolean
      */
-    public static function isValidPrepareForm(HttpRequest $oRequest)
+    public function isValidPrepareForm(HttpRequest $oRequest)
     {
         $arPrepareRequest = $oRequest->get('prepare');
         $flag = false;
@@ -135,6 +146,7 @@ class IblockElement extends EntityUnitClass
     /**
      * @inheritdoc
      * @return array
+     * @throws \Bitrix\Main\LoaderException
      */
     public function getFields(HttpRequest $oRequest = null)
     {
@@ -248,22 +260,22 @@ class IblockElement extends EntityUnitClass
             if ($arProperty['USER_TYPE']) {
                 switch ($arProperty['USER_TYPE']) {
                     case 'UserID':
-                        $arItem['type'] = ["user"];
+                        $arItem['type'] = ['user'];
                         break;
                     case 'DateTime':
-                        $arItem['type'] = ["datetime"];
+                        $arItem['type'] = ['datetime'];
                         break;
                     case 'Date':
-                        $arItem['type'] = ["datetime"];
+                        $arItem['type'] = ['datetime'];
                         break;
                     case 'SectionAuto':
-                        $arItem['type'] = ["iblock.section"];
+                        $arItem['type'] = ['iblock.section'];
                         break;
                     case 'HTML':
-                        $arItem['type'] = ["string"];
+                        $arItem['type'] = ['string'];
                         break;
                     case 'directory':
-                        $arItem['type'] = ["dictionary"];
+                        $arItem['type'] = ['dictionary'];
                         break;
                     default:
                         $arItem['type'] = [];
@@ -272,22 +284,22 @@ class IblockElement extends EntityUnitClass
             } else {
                 switch ($arProperty['PROPERTY_TYPE']) {
                     case 'S':
-                        $arItem['type'] = ["string", "integer"];
+                        $arItem['type'] = ['string', 'integer'];
                         break;
                     case 'N':
-                        $arItem['type'] = ["integer"];
+                        $arItem['type'] = ['integer'];
                         break;
                     case 'F':
-                        $arItem['type'] = ["file"];
+                        $arItem['type'] = ['file'];
                         break;
                     case 'E':
-                        $arItem['type'] = ["iblock.element"];
+                        $arItem['type'] = ['iblock.element'];
                         break;
                     case 'G':
-                        $arItem['type'] = ["iblock.section"];
+                        $arItem['type'] = ['iblock.section'];
                         break;
                     case 'L':
-                        $arItem['type'] = ["iblock.list"];
+                        $arItem['type'] = ['iblock.list'];
                         break;
                     default:
                         $arItem['type'] = [];
@@ -302,6 +314,7 @@ class IblockElement extends EntityUnitClass
     /**
      * @inheritdoc
      * @return mixed
+     * @throws \Bitrix\Main\LoaderException
      */
     public function genUnit()
     {
@@ -349,5 +362,39 @@ class IblockElement extends EntityUnitClass
         }
 
         return $arResult;
+    }
+
+    /**
+     * Удаление сгенерированных данных
+     *
+     * @return mixed
+     * @throws \Bitrix\Main\ArgumentException
+     * @throws \Bitrix\Main\Db\SqlQueryException
+     * @throws \Bitrix\Main\ObjectPropertyException
+     * @throws \Bitrix\Main\SystemException
+     * @throws \Exception
+     */
+    public function deleteGenData()
+    {
+        $arGenData = $this->getGenData();
+
+        $connection = Application::getConnection();
+        $connection->startTransaction();
+
+        foreach ($arGenData as $arGenDatum) {
+            if (!\CIBlockElement::Delete($arGenDatum['GEN_ELEMENT_ID'])) {
+                $connection->rollbackTransaction();
+                throw new \Exception(Loc::getMessage('YLAB_DDATA_DELETE_DATA_OPTION_ERR_DELETE',
+                    ['#ELEMENT_ID#' => $arGenDatum['GEN_ELEMENT_ID']]));
+            }
+            $oResult = DataUnitGenElementsTable::delete($arGenDatum['ID']);
+            if (!$oResult->isSuccess()) {
+                $connection->rollbackTransaction();
+                throw new \Exception(Loc::getMessage('YLAB_DDATA_DELETE_DATA_OPTION_ERR_DELETE',
+                    ['#ELEMENT_ID#' => $arGenDatum['ID']]));
+            }
+        }
+
+        $connection->commitTransaction();
     }
 }

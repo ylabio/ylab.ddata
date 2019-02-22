@@ -1,4 +1,4 @@
-<?
+<?php
 
 namespace Ylab\Ddata\data;
 
@@ -11,35 +11,39 @@ use Ylab\Ddata\Helpers;
 use Bitrix\Main\Loader;
 use Ylab\Ddata\Orm\EntityUnitProfileTable;
 
+Loc::loadMessages(__FILE__);
+
 /**
+ * Генерация случайной валюты, доступной в торговом каталоге
+ *
  * Class RandomCurrency
  * @package Ylab\Ddata\data
  */
 class RandomCurrency extends DataUnitClass
 {
-    private static $bCheckStaticMethod = true;
-
     protected $sRandom = 'N';
+
+    /** @var string $sSelectedValue Выбранное знаечени */
     protected $sSelectedValue = '';
+
+    /** @var array $arCurrency Список доступных валят */
     protected $arCurrency = [];
 
     /**
      * RandomCurrency constructor.
-     * @param $sProfileID
-     * @param $sFieldCode
-     * @param $sGeneratorID
+     * @param $sProfileID - ID профиля
+     * @param $sFieldCode - Симфольный код свойства
+     * @param $sGeneratorID - ID уже сохраненного генератора
      * @throws \Bitrix\Main\ArgumentException
      * @throws \Bitrix\Main\LoaderException
      * @throws \Bitrix\Main\ObjectPropertyException
      * @throws \Bitrix\Main\SystemException
      */
-    public function __construct($sProfileID, $sFieldCode, $sGeneratorID)
+    public function __construct(string $sProfileID = '', string $sFieldCode = '', string $sGeneratorID = '')
     {
-        self::$bCheckStaticMethod = false;
-
         parent::__construct($sProfileID, $sFieldCode, $sGeneratorID);
 
-        $arCurrency = self::getCurrency();
+        $arCurrency = $this->getCurrency();
 
         if (!empty($arCurrency)) {
             $this->arCurrency = $arCurrency;
@@ -52,7 +56,7 @@ class RandomCurrency extends DataUnitClass
         if (!empty($this->options['selected-value'])) {
             $this->sSelectedValue = $this->options['selected-value'];
         } else {
-            $this->sSelectedValue = self::getBaseCurrency();
+            $this->sSelectedValue = $this->getBaseCurrency();
         }
     }
 
@@ -61,14 +65,14 @@ class RandomCurrency extends DataUnitClass
      *
      * @return array
      */
-    public static function getDescription()
+    public function getDescription()
     {
         return [
-            "ID" => "currency.unit",
-            "NAME" => Loc::getMessage("YLAB_DDATA_DATA_UNIT_CURRENCY_NAME"),
-            "DESCRIPTION" => Loc::getMessage("YLAB_DDATA_DATA_UNIT_CURRENCY_DESCRIPTION"),
-            "TYPE" => "currency",
-            "CLASS" => __CLASS__
+            'ID' => 'currency.unit',
+            'NAME' => Loc::getMessage('YLAB_DDATA_DATA_UNIT_CURRENCY_NAME'),
+            'DESCRIPTION' => Loc::getMessage('YLAB_DDATA_DATA_UNIT_CURRENCY_DESCRIPTION'),
+            'TYPE' => 'currency',
+            'CLASS' => __CLASS__
         ];
     }
 
@@ -77,23 +81,13 @@ class RandomCurrency extends DataUnitClass
      *
      * @param HttpRequest $request
      * @return mixed
-     * @throws \Bitrix\Main\ArgumentException
-     * @throws \Bitrix\Main\ObjectPropertyException
-     * @throws \Bitrix\Main\SystemException
-     * @throws \Bitrix\Main\LoaderException
      */
-    public static function getOptionForm(HttpRequest $request)
+    public function getOptionForm(HttpRequest $request)
     {
-        $arRequest = $request->toArray();
-        $arOptions = (array)$arRequest['option'];
         $sGeneratorID = $request->get('generator');
-        $sFieldID = $request->get('field');
         $sProfileID = $request->get('profile_id');
         $sPropertyName = $request->get('property-name');
         $sPropertyCode = $request->get('property-code');
-
-        $arOptions = array_merge(self::getOptions($sGeneratorID, $sProfileID, $sFieldID), $arOptions);
-        $arCurrency = static::getCurrency();
 
         ob_start();
         include Helpers::getModulePath() . '/admin/fragments/random_currency_settings_form.php';
@@ -109,7 +103,7 @@ class RandomCurrency extends DataUnitClass
      * @param HttpRequest $request
      * @return mixed
      */
-    public static function isValidateOptions(HttpRequest $request)
+    public function isValidateOptions(HttpRequest $request)
     {
         $arPrepareRequest = $request->get('option');
 
@@ -117,10 +111,12 @@ class RandomCurrency extends DataUnitClass
             $sRandom = $arPrepareRequest['random'];
             $sSelectedValue = $arPrepareRequest['selected-value'];
 
-            if (!empty($sRandom) || !empty($arSelectedSections)) {
+            if (!empty($sRandom) || !empty($sSelectedValue)) {
                 return true;
             }
         }
+
+        return false;
     }
 
     /**
@@ -131,23 +127,18 @@ class RandomCurrency extends DataUnitClass
      */
     public function getValue()
     {
-        if (!self::$bCheckStaticMethod) {
-            if ($this->sRandom === 'Y') {
-                if ($this->arCurrency) {
-                    $arCurrency = array_keys($this->arCurrency);
-                    return array_rand($arCurrency);
-                }
-            } else {
-                if ($this->sSelectedValue) {
-
-                    return $this->sSelectedValue;
-                }
+        if ($this->sRandom === 'Y') {
+            if ($this->arCurrency) {
+                $arCurrency = array_keys($this->arCurrency);
+                return array_rand($arCurrency);
             }
-
-            return '';
         } else {
-            throw new \Exception(Loc::getMessage('YLAB_DDATA_DATA_IBLOCK_SECTION_EXCEPTION_STATIC'));
+            if ($this->sSelectedValue) {
+                return $this->sSelectedValue;
+            }
         }
+
+        return '';
     }
 
     /**

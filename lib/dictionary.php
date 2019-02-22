@@ -59,7 +59,7 @@ class Dictionary
         while ($arRes = $oRes->fetch()) {
             $arFiles[] = [
                 'ID' => $arRes['ID'],
-                'SRC' => "/upload/" . $arRes['SUBDIR'] . "/" . $arRes['FILE_NAME'],
+                'SRC' => '/upload/' . $arRes['SUBDIR'] . "/" . $arRes['FILE_NAME'],
                 'FILE_SIZE' => $arRes['FILE_SIZE'],
                 'ORIGINAL_NAME' => $arRes['ORIGINAL_NAME'],
                 'DESCRIPTION' => $arRes['DESCRIPTION'],

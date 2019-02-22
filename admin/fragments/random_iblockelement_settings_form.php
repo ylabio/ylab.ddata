@@ -1,35 +1,24 @@
-<?
+<?php
 /**
- * @global $arRequest
- * @global $arOptions
+ * @global $sGeneratorID
+ * @global $sProfileID
  * @global $sPropertyCode
+ * @global $sPropertyName
+ * @global $this
  */
 
 use Bitrix\Main\Localization\Loc;
-use Ylab\Ddata\LoadUnits;
 
 Loc::loadMessages(__FILE__);
 
-$oRequest = \Bitrix\Main\Application::getInstance()->getContext()->getRequest();
-$sEntityID = $oRequest->get('generator');
-$oClasses = new LoadUnits();
-$arClassesData = $oClasses->getDataUnits();
-
-$arEntity = [];
-foreach ($arClassesData as $arClass) {
-    if ($arClass['ID'] == $sEntityID) {
-        $arData = $arClass;
-    }
-}
-
-$oData = new $arData['CLASS']($sProfileID, $sPropertyCode, $sGeneratorID);
-$arIBlocks = $oData->arIBlocks;
-$arIBlockElements = $oData->arIBlockElements;
-$sRandom = $oData->sRandom;
-$arSelectedElements = $oData->arSelectedElements;
+$arIBlocks = $this->arIBlocks;
+$arIBlockElements = $this->arIBlockElements;
+$sRandom = $this->sRandom;
+$arSelectedElements = $this->arSelectedElements;
 ?>
 <script type='text/javascript'>
     BX.ready(function () {
+        BX.Ylab.Settings = function(){};
         var inputOptions = BX.findChild(
             BX(document),
             {
@@ -92,7 +81,6 @@ $arSelectedElements = $oData->arSelectedElements;
                         document.getElementById('iblock-elements-selector').multiple = false;
                     }
                 }
-                console.log(key);
             });
         }
         BX.bind(BX('random-selector'), 'change', function () {
@@ -147,7 +135,7 @@ $arSelectedElements = $oData->arSelectedElements;
         <td width="60%" class="adm-detail-content-cell-r">
             <select name="option[iblock]" id="iblock-selector" size="5" style="width: 50%;">
                 <? foreach ($arIBlocks as $key => $arIBlock): ?>
-                    <option value="<?= $arIBlock['ID'] ?>" <?=($key == 0 ? "selected" : "")?> ><?= $arIBlock['NAME'] ?></option>
+                    <option value="<?= $arIBlock['ID'] ?>" <?= ($key == 0 ? "selected" : "") ?> ><?= $arIBlock['NAME'] ?></option>
                 <? endforeach; ?>
             </select>
         </td>

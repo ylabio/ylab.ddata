@@ -1,4 +1,4 @@
-<?
+<?php
 
 namespace Ylab\Ddata\data;
 
@@ -11,32 +11,37 @@ use Bitrix\Main\Loader;
 use Bitrix\Highloadblock\HighloadBlockTable as HLBT;
 use Ylab\Ddata\Orm\EntityUnitProfileTable;
 
+Loc::loadMessages(__FILE__);
+
 /**
+ * Генератор справочника инфоблока
+ *
  * Class RandomDictionaryHL
  * @package Ylab\Ddata\data
  */
 class RandomDictionaryHL extends DataUnitClass
 {
-    private static $bCheckStaticMethod = true;
-
     protected $sRandom = 'Y';
+
+    /** @var integer $iHLBlock */
     protected $iHLBlock = '';
-    protected $irField = '';
+    protected $iField = '';
     protected $arFieldSelectedElements = [];
 
     /**
      * RandomDictionaryHL constructor.
-     * @param $sProfileID
-     * @param $sFieldCode
-     * @param $sGeneratorID
+     * @param $sProfileID - ID профиля
+     * @param $sFieldCode - Симфольный код свойства
+     * @param $sGeneratorID - ID уже сохраненного генератора
      * @throws \Bitrix\Main\ArgumentException
      * @throws \Bitrix\Main\LoaderException
+     * @throws \Bitrix\Main\SystemException
      */
-    public function __construct($sProfileID, $sFieldCode, $sGeneratorID)
+    public function __construct(string $sProfileID = '', string $sFieldCode = '', string $sGeneratorID = '')
     {
         Loader::includeModule('highloadblock');
+        Loader::includeModule('iblock');
 
-        self::$bCheckStaticMethod = false;
         parent::__construct($sProfileID, $sFieldCode, $sGeneratorID);
 
         if (!empty($this->options['random'])) {
@@ -46,7 +51,7 @@ class RandomDictionaryHL extends DataUnitClass
         if (!empty($this->options['hlblock'])) {
             $this->iHLBlock = $this->options['hlblock'];
         } else {
-            if(!empty($sProfileID)) {
+            if (!empty($sProfileID)) {
                 $arProfile = EntityUnitProfileTable::getById($sProfileID)->fetch();
                 $arProfileOptions = Json::decode($arProfile['OPTIONS']);
                 $iIblockID = $arProfileOptions['iblock_id'];
@@ -69,51 +74,55 @@ class RandomDictionaryHL extends DataUnitClass
 
         if (!empty($this->options['elements'])) {
             if ($this->sRandom === 'Y') {
-                $this->arFieldSelectedElements = static::getHLBlockElements($this->iHLBlock, '', false);
+                $this->arFieldSelectedElements = $this->getHLBlockElements($this->iHLBlock, '', false);
             } else {
-                $this->arFieldSelectedElements = static::getHLBlockElements($this->iHLBlock, '', false, $this->options['elements']);
+                $this->arFieldSelectedElements = $this->getHLBlockElements($this->iHLBlock, '', false, $this->options['elements']);
             }
         } else {
-            $this->arFieldSelectedElements = static::getHLBlockElements($this->iHLBlock, '', false);
+            $this->arFieldSelectedElements = $this->getHLBlockElements($this->iHLBlock, '', false);
         }
     }
 
     /**
+     * Метод возврящает массив описывающий тип данных. ID, Имя, scalar type php
+     *
      * @return array
      */
-    public static function getDescription()
+    public function getDescription()
     {
         return [
-            "ID" => "dictionary.iblock",
-            "NAME" => Loc::getMessage("YLAB_DDATA_DATA_DICTIONARY_IBLOCK_NAME"),
-            "DESCRIPTION" => Loc::getMessage('YLAB_DDATA_DATA_DICTIONARY_IBLOCK_DESCRIPTION'),
-            "TYPE" => "dictionary",
-            "CLASS" => __CLASS__
+            'ID' => 'dictionary.iblock',
+            'NAME' => Loc::getMessage('YLAB_DDATA_DATA_DICTIONARY_IBLOCK_NAME'),
+            'DESCRIPTION' => Loc::getMessage('YLAB_DDATA_DATA_DICTIONARY_IBLOCK_DESCRIPTION'),
+            'TYPE' => 'dictionary',
+            'CLASS' => __CLASS__
         ];
     }
 
     /**
+     * Метод возвращает html строку формы с настройкой генератора если таковые необходимы
+     *
      * @param HttpRequest $request
-     * @return mixed|string
+     * @return false|mixed|string
      * @throws \Bitrix\Main\ArgumentException
+     * @throws \Bitrix\Main\LoaderException
+     * @throws \Bitrix\Main\ObjectPropertyException
+     * @throws \Bitrix\Main\SystemException
      */
-    public static function getOptionForm(HttpRequest $request)
+    public function getOptionForm(HttpRequest $request)
     {
         Loader::includeModule('iblock');
         Loader::includeModule('highloadblock');
         $arRequest = $request->toArray();
-        $arOptions = (array)$arRequest['option'];
         $sGeneratorID = $request->get('generator');
-        $sFieldID = $request->get('field');
         $sProfileID = $request->get('profile_id');
         $sPropertyName = $request->get('property-name');
 
         preg_match_all('/^(.*\[)(.*)(\])/', $sPropertyName, $matches);
         $sPropertyCode = $matches[2][0];
-        $arOptions = array_merge(self::getOptions($sGeneratorID, $sProfileID, $sFieldID), $arOptions);
 
         $iIblockID = $arRequest['prepare']['iblock_id'];
-        if(!empty($sProfileID)) {
+        if (!empty($sProfileID)) {
             $arProfile1 = EntityUnitProfileTable::getById($sProfileID)->fetch();
             $arProfileOptions = Json::decode($arProfile1['OPTIONS']);
             $iIblockID = $arProfileOptions['iblock_id'];
@@ -121,7 +130,8 @@ class RandomDictionaryHL extends DataUnitClass
 
         $oProperties = \CIBlockProperty::GetList([],
             ["ACTIVE" => "Y", "IBLOCK_ID" => $iIblockID, 'CODE' => $sPropertyCode]);
-        $arProperty = [];
+
+        $sHLBTableName = '';
         while ($arProperties = $oProperties->GetNext()) {
             $sHLBTableName = $arProperties['USER_TYPE_SETTINGS']['TABLE_NAME'];
         }
@@ -129,7 +139,7 @@ class RandomDictionaryHL extends DataUnitClass
             'filter' => ['=TABLE_NAME' => $sHLBTableName]
         ])->fetch();
         $iHLBlock = $arHLBlock['ID'];
-        $arFields = static::getHLBlockFields($iHLBlock);
+        $arFields = $this->getHLBlockFields($iHLBlock);
 
         ob_start();
         include Helpers::getModulePath() . '/admin/fragments/random_dictionary_iblock_settings_form.php';
@@ -140,10 +150,12 @@ class RandomDictionaryHL extends DataUnitClass
     }
 
     /**
+     * Метод проверяет на валидность данные настройки генератора
+     *
      * @param HttpRequest $request
      * @return bool|mixed
      */
-    public static function isValidateOptions(HttpRequest $request)
+    public  function isValidateOptions(HttpRequest $request)
     {
         $arPrepareRequest = $request->get('option');
 
@@ -160,31 +172,30 @@ class RandomDictionaryHL extends DataUnitClass
     }
 
     /**
+     * Возвращает случайную запись соответствующего типа
+     *
      * @return mixed
      * @throws \Exception
      */
     public function getValue()
     {
-        if (!self::$bCheckStaticMethod) {
+        if ($this->arFieldSelectedElements) {
+            $sResult = array_rand($this->arFieldSelectedElements);
 
-                if ($this->arFieldSelectedElements) {
-                    $sResult = array_rand($this->arFieldSelectedElements);
-
-                    return $this->arFieldSelectedElements[$sResult];
-                }
-
-        } else {
-            throw new \Exception(Loc::getMessage('YLAB_DDATA_DATA_HL_ELEMENT_EXCEPTION_STATIC'));
+            return $this->arFieldSelectedElements[$sResult];
         }
+
+        return [];
     }
 
     /**
+     * Получение свойст HL блока
+     *
      * @param int $iHLBlockId
      * @return array
-     * @throws \Bitrix\Main\ArgumentException
      * @throws \Bitrix\Main\LoaderException
      */
-    public static function getHLBlockFields($iHLBlockId = 0)
+    public function getHLBlockFields($iHLBlockId = 0)
     {
         Loader::includeModule('highloadblock');
 
@@ -214,22 +225,26 @@ class RandomDictionaryHL extends DataUnitClass
     }
 
     /**
+     * Получение элементов HL блока
+     *
      * @param int $iHLBlockId
      * @param string $sField
      * @param bool $bFullData
+     * @param array $arElementsID
      * @return array
      * @throws \Bitrix\Main\LoaderException
+     * @throws \Bitrix\Main\SystemException
      */
-    public static function getHLBlockElements($iHLBlockId = 0, $sField = '', $bFullData = true, $arElementsID = [])
+    public function getHLBlockElements($iHLBlockId = 0, $sField = '', $bFullData = true, $arElementsID = [])
     {
         Loader::includeModule('highloadblock');
 
         $arList = [];
 
         if ($iHLBlockId) {
-            $sEntityDataClass = static::GetEntityDataClass($iHLBlockId);
+            $sEntityDataClass = $this->GetEntityDataClass($iHLBlockId);
 
-            if(!empty($arElementsID)) {
+            if (!empty($arElementsID)) {
                 $arFilter = ['=ID' => $arElementsID];
             } else {
                 $arFilter = [];
@@ -256,8 +271,10 @@ class RandomDictionaryHL extends DataUnitClass
     }
 
     /**
+     * Получение класса сущности HL
+     *
      * @param $iHlBlockId
-     * @return \Bitrix\Main\Entity\DataManager|bool
+     * @return \Bitrix\Main\ORM\Data\DataManager|bool
      * @throws \Bitrix\Main\SystemException
      */
     private function GetEntityDataClass($iHlBlockId)

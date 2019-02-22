@@ -1,4 +1,4 @@
-<?
+<?php
 
 namespace Ylab\Ddata\data;
 
@@ -9,34 +9,38 @@ use Ylab\Ddata\Helpers;
 use Bitrix\Main\Loader;
 use Bitrix\Highloadblock\HighloadBlockTable as HLBT;
 
+Loc::loadMessages(__FILE__);
+
 /**
+ * Генератор привязки к элементам highload-блоков
+ *
  * Class RandomHLElement
  * @package Ylab\Ddata\data
  */
 class RandomHLElement extends DataUnitClass
 {
-    private static $bCheckStaticMethod = true;
-
     protected $sRandom = 'Y';
+
+    /** @var integer $iHLBlock */
     protected $iHLBlock = '';
-    protected $irField = '';
+    protected $arHLBlocks = [];
+    protected $iField = '';
     protected $arFieldSelectedElements = [];
 
     /**
      * RandomHLElement constructor.
-     * @param $sProfileID
-     * @param $sFieldCode
-     * @param $sGeneratorID
+     * @param $sProfileID - ID профиля
+     * @param $sFieldCode - Симфольный код свойства
+     * @param $sGeneratorID - ID уже сохраненного генератора
      * @throws \Bitrix\Main\ArgumentException
      * @throws \Bitrix\Main\LoaderException
      * @throws \Bitrix\Main\ObjectPropertyException
      * @throws \Bitrix\Main\SystemException
      */
-    public function __construct($sProfileID, $sFieldCode, $sGeneratorID)
+    public function __construct(string $sProfileID = '', string $sFieldCode = '', string $sGeneratorID = '')
     {
         Loader::includeModule('highloadblock');
 
-        self::$bCheckStaticMethod = false;
         parent::__construct($sProfileID, $sFieldCode, $sGeneratorID);
 
         $arHLBlocks = HLBT::getList([
@@ -61,7 +65,7 @@ class RandomHLElement extends DataUnitClass
 
         if (!empty($this->options['elements'])) {
             if ($this->sRandom === 'Y') {
-                $this->arFieldSelectedElements = static::getHLBlockElements($this->iHLBlock, '', false);
+                $this->arFieldSelectedElements = $this->getHLBlockElements($this->iHLBlock, '', false);
             } else {
                 $this->arFieldSelectedElements = $this->options['elements'];
             }
@@ -69,38 +73,36 @@ class RandomHLElement extends DataUnitClass
     }
 
     /**
+     * Метод возврящает массив описывающий тип данных. ID, Имя, scalar type php
+     *
      * @return array
      */
-    public static function getDescription()
+    public function getDescription()
     {
         return [
-            "ID" => "hl.element",
-            "NAME" => Loc::getMessage("YLAB_DDATA_DATA_HL_ELEMENT_NAME"),
-            "DESCRIPTION" => Loc::getMessage('YLAB_DDATA_DATA_HL_ELEMENT_DESCRIPTION'),
-            "TYPE" => "hl.element",
-            "CLASS" => __CLASS__
+            'ID' => 'hl.element',
+            'NAME' => Loc::getMessage('YLAB_DDATA_DATA_HL_ELEMENT_NAME'),
+            'DESCRIPTION' => Loc::getMessage('YLAB_DDATA_DATA_HL_ELEMENT_DESCRIPTION'),
+            'TYPE' => 'hl.element',
+            'CLASS' => __CLASS__
         ];
     }
 
     /**
+     * Метод возвращает html строку формы с настройкой генератора если таковые необходимы
+     *
      * @param HttpRequest $request
-     * @return mixed|string
-     * @throws \Bitrix\Main\ArgumentException
-     * @throws \Bitrix\Main\ObjectPropertyException
-     * @throws \Bitrix\Main\SystemException
+     * @return false|mixed|string
      */
-    public static function getOptionForm(HttpRequest $request)
+    public function getOptionForm(HttpRequest $request)
     {
         $arRequest = $request->toArray();
-        $arOptions = (array)$arRequest['option'];
         $sGeneratorID = $request->get('generator');
-        $sFieldID = $request->get('field');
         $sProfileID = $request->get('profile_id');
         $sPropertyName = $request->get('property-name');
 
         preg_match_all('/^(.*\[)(.*)(\])/', $sPropertyName, $matches);
         $sPropertyCode = $matches[2][0];
-        $arOptions = array_merge(self::getOptions($sGeneratorID, $sProfileID, $sFieldID), $arOptions);
 
         ob_start();
         include Helpers::getModulePath() . '/admin/fragments/random_hl_element_form.php';
@@ -111,10 +113,12 @@ class RandomHLElement extends DataUnitClass
     }
 
     /**
+     * Метод проверяет на валидность данные настройки генератора
+     *
      * @param HttpRequest $request
      * @return bool|mixed
      */
-    public static function isValidateOptions(HttpRequest $request)
+    public  function isValidateOptions(HttpRequest $request)
     {
         $arPrepareRequest = $request->get('option');
 
@@ -131,36 +135,35 @@ class RandomHLElement extends DataUnitClass
     }
 
     /**
+     * Возвращает случайную запись соответствующего типа
+     *
      * @return mixed
      * @throws \Exception
      */
     public function getValue()
     {
-        if (!self::$bCheckStaticMethod) {
-            if ($this->sRandom === 'Y') {
-                if ($this->arFieldSelectedElements) {
-                    return array_rand($this->arFieldSelectedElements);
-                }
-            } else {
-                if ($this->arFieldSelectedElements) {
-                    $sResult = array_rand($this->arFieldSelectedElements);
-                    return $this->arFieldSelectedElements[$sResult];
-                }
+        if ($this->sRandom === 'Y') {
+            if ($this->arFieldSelectedElements) {
+                return array_rand($this->arFieldSelectedElements);
             }
         } else {
-            throw new \Exception(Loc::getMessage('YLAB_DDATA_DATA_HL_ELEMENT_EXCEPTION_STATIC'));
+            if ($this->arFieldSelectedElements) {
+                $sResult = array_rand($this->arFieldSelectedElements);
+                return $this->arFieldSelectedElements[$sResult];
+            }
         }
+
+        return [];
     }
 
     /**
+     * Получение свойст HL блока
+     *
      * @param int $iHLBlockId
      * @return array
-     * @throws \Bitrix\Main\ArgumentException
      * @throws \Bitrix\Main\LoaderException
-     * @throws \Bitrix\Main\ObjectPropertyException
-     * @throws \Bitrix\Main\SystemException
      */
-    public static function getHLBlockFields($iHLBlockId = 0)
+    public function getHLBlockFields($iHLBlockId = 0)
     {
         Loader::includeModule('highloadblock');
 
@@ -190,23 +193,23 @@ class RandomHLElement extends DataUnitClass
     }
 
     /**
+     * Получение элементов HL блока
+     *
      * @param int $iHLBlockId
      * @param string $sField
      * @param bool $bFullData
      * @return array
-     * @throws \Bitrix\Main\ArgumentException
      * @throws \Bitrix\Main\LoaderException
-     * @throws \Bitrix\Main\ObjectPropertyException
      * @throws \Bitrix\Main\SystemException
      */
-    public static function getHLBlockElements($iHLBlockId = 0, $sField = '', $bFullData = true)
+    public function getHLBlockElements($iHLBlockId = 0, $sField = '', $bFullData = true)
     {
         Loader::includeModule('highloadblock');
 
         $arList = [];
 
         if ($iHLBlockId) {
-            $sEntityDataClass = static::GetEntityDataClass($iHLBlockId);
+            $sEntityDataClass = $this->GetEntityDataClass($iHLBlockId);
 
             $oData = $sEntityDataClass::getList([
                 'select' => ['*']
@@ -228,6 +231,8 @@ class RandomHLElement extends DataUnitClass
     }
 
     /**
+     * Получение класса сущности HL
+     *
      * @param $iHlBlockId
      * @return \Bitrix\Main\Entity\DataManager|bool
      * @throws \Bitrix\Main\SystemException

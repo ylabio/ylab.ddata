@@ -12,29 +12,31 @@ use Bitrix\Main\Web\Json;
 Loc::loadMessages(__FILE__);
 
 /**
+ * Генерация случайной категории инфоблока
+ *
  * Class RandomIBlockSection
  * @package Ylab\Ddata\Data
  */
 class RandomIBlockSection extends DataUnitClass
 {
-    private static $bCheckStaticMethod = true;
-
     protected $sRandom = 'Y';
+
+    /** @var array $arSectionsRandom */
     protected $arSectionsRandom = [];
+
+    /** @var array $arSelectedSections */
     protected $arSelectedSections = [];
 
     /**
      * RandomIBlockSection constructor.
-     * @param $sProfileID
-     * @param $sFieldCode
-     * @param $sGeneratorID
+     * @param $sProfileID - ID профиля
+     * @param $sFieldCode - Симфольный код свойства
+     * @param $sGeneratorID - ID уже сохраненного генератора
      * @throws \Bitrix\Main\ArgumentException
      * @throws \Exception
      */
-    public function __construct($sProfileID, $sFieldCode, $sGeneratorID)
+    public function __construct(string $sProfileID = '', string $sFieldCode = '', string $sGeneratorID = '')
     {
-        self::$bCheckStaticMethod = false;
-
         parent::__construct($sProfileID, $sFieldCode, $sGeneratorID);
 
         if (!empty($this->options['selected-sections'])) {
@@ -45,59 +47,57 @@ class RandomIBlockSection extends DataUnitClass
             $this->sRandom = $this->options['random'];
 
             if ($this->sRandom == 'Y') {
-                $iIblockId = static::getIblockId($sProfileID);
+                $iIblockId = $this->getIblockId($sProfileID);
                 if (empty($iIblockId)) {
                     throw new \Exception(Loc::getMessage('YLAB_DDATA_DATA_IBLOCK_SECTION_EXCEPTION_IBLOC_ID'));
                 }
 
                 if (count($this->arSelectedSections) == 1) {
-                    $this->arSectionsRandom = static::getSectionList($iIblockId, $this->arSelectedSections[0]);
+                    $this->arSectionsRandom = $this->getSectionList($iIblockId, $this->arSelectedSections[0]);
                 } else {
-                    $this->arSectionsRandom = static::getSectionList($iIblockId);
+                    $this->arSectionsRandom = $this->getSectionList($iIblockId);
                 }
             }
         } else {
-            $iIblockId = static::getIblockId($sProfileID);
+            $iIblockId = $this->getIblockId($sProfileID);
             if (empty($iIblockId)) {
                 throw new \Exception(Loc::getMessage('YLAB_DDATA_DATA_IBLOCK_SECTION_EXCEPTION_IBLOC_ID'));
             }
 
             if (count($this->arSelectedSections) == 1) {
-                $this->arSectionsRandom = static::getSectionList($iIblockId, $this->arSelectedSections[0]);
+                $this->arSectionsRandom = $this->getSectionList($iIblockId, $this->arSelectedSections[0]);
             } else {
-                $this->arSectionsRandom = static::getSectionList($iIblockId);
+                $this->arSectionsRandom = $this->getSectionList($iIblockId);
             }
         }
     }
 
     /**
+     * Метод возврящает массив описывающий тип данных. ID, Имя, scalar type php
+     *
      * @return array
      */
-    public static function getDescription()
+    public function getDescription()
     {
         return [
-            "ID" => "iblock.section",
-            "NAME" => Loc::getMessage("YLAB_DDATA_DATA_IBLOCK_SECTION_NAME"),
-            "DESCRIPTION" => Loc::getMessage('YLAB_DDATA_DATA_IBLOCK_SECTION_DESCRIPTION'),
-            "TYPE" => "iblock.section",
-            "CLASS" => __CLASS__
+            'ID' => 'iblock.section',
+            'NAME' => Loc::getMessage('YLAB_DDATA_DATA_IBLOCK_SECTION_NAME'),
+            'DESCRIPTION' => Loc::getMessage('YLAB_DDATA_DATA_IBLOCK_SECTION_DESCRIPTION'),
+            'TYPE' => 'iblock.section',
+            'CLASS' => __CLASS__
         ];
     }
 
     /**
-     * @inheritdoc
      * @param HttpRequest $request
-     * @return string
+     * @return false|mixed|string
      * @throws \Bitrix\Main\ArgumentException
-     * @throws \Exception
      */
-    public static function getOptionForm(HttpRequest $request)
+    public function getOptionForm(HttpRequest $request)
     {
-
         $arRequest = $request->toArray();
         $arOptions = (array)$arRequest['option'];
         $sGeneratorID = $request->get('generator');
-        $sFieldID = $request->get('field');
         $sProfileID = $request->get('profile_id');
         $sPropertyName = $request->get('property-name');
         $arClassVars = get_class_vars(__CLASS__);
@@ -108,19 +108,20 @@ class RandomIBlockSection extends DataUnitClass
         if (!is_array($arOptions)) {
             $arOptions = [];
         }
-        $arOptions = array_merge($arDefaultOptions, self::getOptions($sGeneratorID, $sProfileID, $sFieldID),
-            $arOptions);
+
+        $arOptions = array_merge($arDefaultOptions, $arOptions);
+
         $arIblockId = $request->get('prepare');
         $iIblockId = $arIblockId['iblock_id'];
 
         if (empty($iIblockId)) {
-            $iIblockId = static::getIblockId($sProfileID);
+            $iIblockId = $this->getIblockId($sProfileID);
             if (empty($iIblockId)) {
                 throw new \Exception(Loc::getMessage('YLAB_DDATA_DATA_IBLOCK_SECTION_EXCEPTION_IBLOC_ID'));
             }
         }
 
-        $arSection = static::getSectionList($iIblockId);
+        $arSection = $this->getSectionList($iIblockId);
 
         ob_start();
         include Helpers::getModulePath() . '/admin/fragments/random_iblock_section_settings_form.php';
@@ -131,11 +132,12 @@ class RandomIBlockSection extends DataUnitClass
     }
 
     /**
-     * @inheritdoc
+     * Метод проверяет на валидность данные настройки генератора
+     *
      * @param HttpRequest $request
      * @return bool
      */
-    public static function isValidateOptions(HttpRequest $request)
+    public  function isValidateOptions(HttpRequest $request)
     {
         $arPrepareRequest = $request->get('option');
 
@@ -147,37 +149,39 @@ class RandomIBlockSection extends DataUnitClass
                 return true;
             }
         }
+
+        return false;
     }
 
     /**
-     * @inheritdoc
+     * Возвращает случайную запись соответствующего типа
+     *
      * @return mixed|string
      * @throws \Exception
      */
     public function getValue()
     {
-        if (!self::$bCheckStaticMethod) {
-            if ($this->sRandom === 'Y') {
-                if ($this->arSectionsRandom) {
-                    $sResult = array_rand($this->arSectionsRandom);
-                    return $sResult;
-                }
-            } else {
-                if ($this->arSelectedSections) {
-                    $sResult = array_rand($this->arSelectedSections);
-
-                    return $this->arSelectedSections[$sResult];
-                }
+        if ($this->sRandom === 'Y') {
+            if ($this->arSectionsRandom) {
+                $sResult = array_rand($this->arSectionsRandom);
+                return $sResult;
             }
-
-            return '';
         } else {
-            throw new \Exception(Loc::getMessage('YLAB_DDATA_DATA_IBLOCK_SECTION_EXCEPTION_STATIC'));
+            if ($this->arSelectedSections) {
+                $sResult = array_rand($this->arSelectedSections);
+
+                return $this->arSelectedSections[$sResult];
+            }
         }
+
+        return '';
     }
 
     /**
-     * @param int $iIblockId
+     * Получим список секций ИБ
+     *
+     * @param int $iIblockId ID инфолбока
+     * @param int $iParendID ID родительской секции
      * @return array
      */
     private function getSectionList($iIblockId = 0, $iParendID = 0)
@@ -204,11 +208,11 @@ class RandomIBlockSection extends DataUnitClass
     }
 
     /**
+     * Получение ID инфоблока из настроек профиля
+     *
      * @param $sProfileID
      * @return bool
      * @throws \Bitrix\Main\ArgumentException
-     * @throws \Bitrix\Main\ObjectPropertyException
-     * @throws \Bitrix\Main\SystemException
      */
     private function getIblockId($sProfileID)
     {

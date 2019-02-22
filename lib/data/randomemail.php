@@ -10,32 +10,38 @@ use Ylab\Ddata\Helpers;
 Loc::loadMessages(__FILE__);
 
 /**
+ * Генерация случайного e-mail
+ *
  * Class RandomEmail
  * @package Ylab\Ddata\Data
  */
 class RandomEmail extends DataUnitClass
 {
-    private static $bCheckStaticMethod = true;
-
     protected $sSpecialChars = 'N';
+
+    /** @var int $iLoginMinLength Минимальная длина имени email`а */
     protected $iLoginMinLength = 6;
+
+    /** @var int $iLoginMaxLength Максимальная длина имени email`а */
     protected $iLoginMaxLength = 12;
+
+    /** @var string $sDomains Список доступных доменов */
     protected $sDomains = 'yandex|mail|gmail';
+
+    /** @var string $sSubDomains Список доступных доменных зон */
     protected $sSubDomains = 'ru|com';
 
     /**
      * RandomEmail constructor.
-     * @param $sProfileID
-     * @param $sFieldCode
-     * @param $sGeneratorID
+     * @param $sProfileID - ID профиля
+     * @param $sFieldCode - Симфольный код свойства
+     * @param $sGeneratorID - ID уже сохраненного генератора
      * @throws \Bitrix\Main\ArgumentException
      * @throws \Bitrix\Main\ObjectPropertyException
      * @throws \Bitrix\Main\SystemException
      */
-    public function __construct($sProfileID, $sFieldCode, $sGeneratorID)
+    public function __construct(string $sProfileID = '', string $sFieldCode = '', string $sGeneratorID = '')
     {
-        self::$bCheckStaticMethod = false;
-
         parent::__construct($sProfileID, $sFieldCode, $sGeneratorID);
 
         if (!empty($this->options['special-chars'])) {
@@ -60,36 +66,33 @@ class RandomEmail extends DataUnitClass
     }
 
     /**
+     * Метод возврящает массив описывающий тип данных. ID, Имя, scalar type php
+     *
      * @return array
      */
-    public static function getDescription()
+    public  function getDescription()
     {
         return [
-            "ID" => "email.string.unit",
-            "NAME" => Loc::getMessage("YLAB_DDATA_DATA_UNIT_EMAIL_NAME"),
-            "DESCRIPTION" => Loc::getMessage('YLAB_DDATA_DATA_UNIT_EMAIL_DESCRIPTION'),
-            "TYPE" => "string",
-            "CLASS" => __CLASS__
+            'ID' => 'email.string.unit',
+            'NAME' => Loc::getMessage('YLAB_DDATA_DATA_UNIT_EMAIL_NAME'),
+            'DESCRIPTION' => Loc::getMessage('YLAB_DDATA_DATA_UNIT_EMAIL_DESCRIPTION'),
+            'TYPE' => 'string',
+            'CLASS' => __CLASS__
         ];
     }
 
     /**
+     * Метод возвращает html строку формы с настройкой генератора если таковые необходимы
+     *
      * @param HttpRequest $request
-     * @return mixed|string
-     * @throws \Bitrix\Main\ArgumentException
-     * @throws \Bitrix\Main\ObjectPropertyException
-     * @throws \Bitrix\Main\SystemException
+     * @return false|mixed|string
      */
-    public static function getOptionForm(HttpRequest $request)
+    public function getOptionForm(HttpRequest $request)
     {
-        $arRequest = $request->toArray();
-        $arOptions = (array)$arRequest['option'];
         $sGeneratorID = $request->get('generator');
-        $sFieldID = $request->get('field');
         $sProfileID = $request->get('profile_id');
         $sPropertyName = $request->get('property-name');
-
-        $arOptions = array_merge(self::getOptions($sGeneratorID, $sProfileID, $sFieldID), $arOptions);
+        $sPropertyCode = $request->get('property-code');
 
         ob_start();
         include Helpers::getModulePath() . '/admin/fragments/random_email_settings_form.php';
@@ -100,10 +103,12 @@ class RandomEmail extends DataUnitClass
     }
 
     /**
+     * Метод проверяет на валидность данные настройки генератора
+     *
      * @param HttpRequest $request
      * @return bool
      */
-    public static function isValidateOptions(HttpRequest $request)
+    public  function isValidateOptions(HttpRequest $request)
     {
         $arPrepareRequest = $request->get('option');
 
@@ -112,8 +117,8 @@ class RandomEmail extends DataUnitClass
             $sDomains = $arPrepareRequest['domains'];
             $sSubDomains = $arPrepareRequest['sub-domains'];
 
-            $iLoginMinLength = (int) $arPrepareRequest['login-min-length'];
-            $iLoginMaxLength = (int) $arPrepareRequest['login-max-length'];
+            $iLoginMinLength = (int)$arPrepareRequest['login-min-length'];
+            $iLoginMaxLength = (int)$arPrepareRequest['login-max-length'];
 
             if (!empty($sSpecialChars) &&
                 !empty($sDomains) &&
@@ -128,45 +133,43 @@ class RandomEmail extends DataUnitClass
     }
 
     /**
+     * Возвращает случайную запись соответствующего типа
+     *
      * @return string
      * @throws \Exception
      */
     public function getValue()
     {
-        if (!self::$bCheckStaticMethod) {
 
-            $sSymbols = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-            if ($this->sSpecialChars === 'Y') {
-                $sSymbols .= "!#$%&'*+-/=?^_`{|}~";
-            }
-            $sSymbols = str_shuffle($sSymbols);
-            $iSize = strlen($sSymbols) - 1;
+        $sSymbols = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        if ($this->sSpecialChars === 'Y') {
+            $sSymbols .= "!#$%&'*+-/=?^_`{|}~";
+        }
+        $sSymbols = str_shuffle($sSymbols);
+        $iSize = strlen($sSymbols) - 1;
 
-            $iStringLength = rand($this->iLoginMinLength, $this->iLoginMaxLength);
-            $sResultName = '';
-            while (strlen($sResultName) < $iStringLength) {
-                $sResultName .= mb_substr($sSymbols, rand(0, $iSize - 1), 1);
-            }
+        $iStringLength = rand($this->iLoginMinLength, $this->iLoginMaxLength);
+        $sResultName = '';
+        while (strlen($sResultName) < $iStringLength) {
+            $sResultName .= mb_substr($sSymbols, rand(0, $iSize - 1), 1);
+        }
 
-            $sResultDomain = '';
-            $arDomains = array_diff(explode("|", $this->sDomains), ['']);
-            if (count($arDomains) > 0) {
-                shuffle($arDomains);
-            }
-            $sResultDomain = $arDomains[0];
+        $sResultDomain = '';
+        $arDomains = array_diff(explode("|", $this->sDomains), ['']);
+        if (count($arDomains) > 0) {
+            shuffle($arDomains);
+        }
+        $sResultDomain = $arDomains[0];
 
-            $sResultSubDomains = '';
-            $arSubDomains = array_diff(explode("|", $this->sSubDomains), ['']);
-            if (count($arSubDomains) > 0) {
-                shuffle($arSubDomains);
-            }
-            $sResultSubDomains = $arSubDomains[0];
+        $sResultSubDomains = '';
+        $arSubDomains = array_diff(explode("|", $this->sSubDomains), ['']);
+        if (count($arSubDomains) > 0) {
+            shuffle($arSubDomains);
+        }
+        $sResultSubDomains = $arSubDomains[0];
 
-            if ($sResultName && $sResultDomain && $sResultSubDomains) {
-                return strtolower($sResultName . "@" . $sResultDomain . "." . $sResultSubDomains);
-            }
-        } else {
-            throw new \Exception(Loc::getMessage('YLAB_DDATA_DATA_UNIT_PASSWORD_EXCEPTION_STATIC'));
+        if ($sResultName && $sResultDomain && $sResultSubDomains) {
+            return strtolower($sResultName . "@" . $sResultDomain . "." . $sResultSubDomains);
         }
 
         return '';

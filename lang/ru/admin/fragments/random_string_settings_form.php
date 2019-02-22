@@ -1,4 +1,4 @@
-<?
+<?php
 $MESS['LANG'] = 'Язык';
 $MESS['CHOOSE_LANG'] = 'Выберите язык';
 $MESS['LANG_EN'] = 'Английский';

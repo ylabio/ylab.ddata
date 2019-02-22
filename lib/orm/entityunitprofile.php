@@ -30,7 +30,7 @@ class EntityUnitProfileTable extends Entity\DataManager
             ]),
             new Entity\StringField('NAME', [
                 'required' => true,
-                'validation' => function() {
+                'validation' => function () {
                     return [
                         new Entity\Validator\Unique(),
                         new Entity\Validator\Length(1, 255)
@@ -39,7 +39,7 @@ class EntityUnitProfileTable extends Entity\DataManager
             ]),
             new Entity\StringField('TYPE', [
                 'required' => true,
-                'validation' => function() {
+                'validation' => function () {
                     return [
                         new Entity\Validator\Length(1, 255)
                     ];
@@ -48,7 +48,7 @@ class EntityUnitProfileTable extends Entity\DataManager
             new Entity\StringField('XML_ID', [
                 'unique' => true,
                 'required' => true,
-                'validation' => function() {
+                'validation' => function () {
                     return [
                         new Entity\Validator\Unique(),
                         new Entity\Validator\Length(0, 255)

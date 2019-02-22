@@ -30,26 +30,48 @@ class LoadUnits
     {
         $classFileDir = '/lib/data';
         $classNameSpace = 'Ylab\Ddata\Data';
-        $classInterface = 'Ylab\Ddata\Interfaces\GenDataUnit';
+        $classInterface = 'Ylab\Ddata\Interfaces\DataUnitClass';
         $arClassesList = $this->getClassFiles($classFileDir);
         $arUnits = [];
         foreach ($arClassesList as $class) {
             $class = $classNameSpace . '\\' . $class;
-            if (key_exists($classInterface, class_implements($class))) {
+            if (key_exists($classInterface, class_parents($class))) {
                 $arUnits[] = $class::getDescription();
             }
         }
 
-        $oEvent = new Event("ylab.ddata", "OnAfterLoadDataUnits", $arUnits);
+        $oEvent = new Event("ylab.ddata", "OnAfterLoadDataUnits");
         $oEvent->send();
         if ($oEvent->getResults()) {
             /** @var \Bitrix\Main\EventResult $eventResult */
             foreach ($oEvent->getResults() as $eventResult) {
-                $arUnits[] = $eventResult->getParameters();
+                $sClass = $eventResult->getParameters();
+                if (class_exists($sClass) && key_exists($classInterface, class_parents($sClass))) {
+                    $arUnits[] = $sClass::getDescription();
+                }
             }
         }
 
         return $arUnits;
+    }
+
+    /**
+     * Выбирает массив данных генератора по id
+     *
+     * @param string $sId - Идентификатор нужного генератора
+     * @return array - Возвращает массив с данными
+     */
+    public function getDataUnitById(string $sId){
+        $arDataForm = [];
+
+        foreach ($this->getDataUnits() as $arData) {
+            if ($arData['ID'] == $sId) {
+                $arDataForm = $arData;
+                break;
+            }
+        }
+
+        return $arDataForm;
     }
 
     /**
@@ -59,22 +81,25 @@ class LoadUnits
     {
         $classFileDir = '/lib/entity';
         $classNameSpace = 'Ylab\Ddata\Entity';
-        $classInterface = 'Ylab\Ddata\Interfaces\GenEntityUnit';
+        $classInterface = 'Ylab\Ddata\Interfaces\EntityUnitClass';
         $arClassesList = $this->getClassFiles($classFileDir);
         $arUnits = [];
         foreach ($arClassesList as $class) {
             $class = $classNameSpace . '\\' . $class;
-            if (key_exists($classInterface, class_implements($class))) {
+            if (key_exists($classInterface, class_parents($class))) {
                 $arUnits[] = $class::getDescription();
             }
         }
 
-        $oEvent = new Event("ylab.ddata", "OnAfterLoadEntityUnits", $arUnits);
+        $oEvent = new Event("ylab.ddata", "OnAfterLoadEntityUnits");
         $oEvent->send();
         if ($oEvent->getResults()) {
             /** @var \Bitrix\Main\EventResult $eventResult */
             foreach ($oEvent->getResults() as $eventResult) {
-                $arUnits[] = $eventResult->getParameters();
+                $sClass = $eventResult->getParameters();
+                if (class_exists($sClass) && key_exists($classInterface, class_parents($sClass))) {
+                    $arUnits[] = $sClass::getDescription();
+                }
             }
         }
 

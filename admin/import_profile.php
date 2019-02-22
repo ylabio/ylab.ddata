@@ -1,5 +1,5 @@
-<?
-require_once($_SERVER["DOCUMENT_ROOT"] . "/bitrix/modules/main/include/prolog_admin.php");
+<?php
+require_once $_SERVER['DOCUMENT_ROOT'] . '/bitrix/modules/main/include/prolog_admin.php';
 
 use Bitrix\Main;
 use Bitrix\Main\Loader;
@@ -10,6 +10,7 @@ Loader::includeModule('ylab.ddata');
 Loc::loadMessages(__FILE__);
 Loc::loadMessages(LANG_ROOT);
 
+/** @global CMain $APPLICATION */
 global $APPLICATION;
 $APPLICATION->SetTitle(Loc::getMessage('YLAB_DDATA_TITLE'));
 
@@ -26,7 +27,7 @@ if ($sPath) {
                 echo $oError->getMessage();
                 echo '<br>';
             } ?>
-            <a href="ylab.ddata_entity_profile_list.php?lang=ru"><?=Loc::getMessage('YLAB_DDATA_RETURN')?></a>
+            <a href="ylab.ddata_entity_profile_list.php?lang=ru"><?= Loc::getMessage('YLAB_DDATA_RETURN') ?></a>
         </div>
         <?
     }
@@ -42,5 +43,4 @@ echo '</div>';
 echo EndNote();
 
 
-require($_SERVER["DOCUMENT_ROOT"] . "/bitrix/modules/main/include/epilog_admin.php");
-?>
+require $_SERVER['DOCUMENT_ROOT'] . '/bitrix/modules/main/include/epilog_admin.php';

@@ -1,33 +1,22 @@
 <?php
 /**
- * @global $arRequest
- * @global $arOptions
+ * @global $sGeneratorID
+ * @global $sProfileID
  * @global $sPropertyCode
+ * @global $sPropertyName
+ * @global $this
  */
 
 use Bitrix\Main\Localization\Loc;
-use Ylab\Ddata\LoadUnits;
 
 Loc::loadMessages(__FILE__);
 
-$oRequest = \Bitrix\Main\Application::getInstance()->getContext()->getRequest();
-$sEntityID = $oRequest->get('generator');
-$oClasses = new LoadUnits();
-$arClassesData = $oClasses->getDataUnits();
-
-$arEntity = [];
-foreach ($arClassesData as $arClass) {
-    if ($arClass['ID'] == $sEntityID) {
-        $arData = $arClass;
-    }
-}
-
-$oData = new $arData['CLASS']($sProfileID, $sPropertyCode, $sGeneratorID);
-$sGenerate = $oData->sGenerate;
-$iCount = $oData->iCount;
-$sHtmlWrap = $oData->sHtmlWrap;
+$sGenerate = $this->sGenerate;
+$iCount = $this->iCount;
+$sHtmlWrap = $this->sHtmlWrap;
 ?>
 <script type='text/javascript'>
+    BX.Ylab.Settings = function(){};
     RegExp.escape = function (text) {
         if (!arguments.callee.sRE) {
             var specials = [
@@ -95,4 +84,3 @@ $sHtmlWrap = $oData->sHtmlWrap;
     </tr>
     </tbody>
 </table>
-

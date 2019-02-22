@@ -1,4 +1,4 @@
-<?
+<?php
 $MESS['SPECIAL_CHARS'] = 'Cпецсимволы в логине';
 $MESS['LOGIN_MIN_LENGHT'] = 'Минимальная длина логина';
 $MESS['LOGIN_MAX_LENGHT'] = 'Максимальная длина логина';

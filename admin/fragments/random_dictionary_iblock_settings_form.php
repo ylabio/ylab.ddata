@@ -1,40 +1,30 @@
 <?php
 /**
- * @global $arRequest
- * @global $arOptions
+ * @global $sGeneratorID
+ * @global $sProfileID
  * @global $sPropertyCode
+ * @global $sPropertyName
+ * @global $this
+ * @global $arFields
+ * @global $request
+ * @global $iHLBlock
  */
 
 use Bitrix\Main\Localization\Loc;
-use Ylab\Ddata\LoadUnits;
 
 Loc::loadMessages(__FILE__);
 
-$oRequest = \Bitrix\Main\Application::getInstance()->getContext()->getRequest();
-$arRequest = $oRequest->toArray();
-$sEntityID = $oRequest->get('generator');
-$oClasses = new LoadUnits();
-$arClassesData = $oClasses->getDataUnits();
 
-$arEntity = [];
-foreach ($arClassesData as $arClass) {
-    if ($arClass['ID'] == $sEntityID) {
-        $arData = $arClass;
-    }
-}
-
-$oData = new $arData['CLASS']($sProfileID, $sPropertyCode, $sGeneratorID);
-
-if ($oRequest->isPost()) {
+if ($request->isPost()) {
     if (isset($arRequest['option']['field']) && $arRequest['option']['field'] != "") {
-        $arFieldElements = $oData::getHLBlockElements($arRequest['option']['hlblock'],
+        $arFieldElements = $this::getHLBlockElements($arRequest['option']['hlblock'],
             $arRequest['option']['field']);
     }
 }
 
-if ($oRequest->isPost() && $arRequest['save-data']) {
+if ($request->isPost() && $arRequest['save-data']) {
     if (isset($arRequest['hlblock']) && $arRequest['hlblock'] != '') {
-        $arFieldElements = $oData::getHLBlockElements($arRequest['hlblock'], $arRequest['field']);
+        $arFieldElements = $this::getHLBlockElements($arRequest['hlblock'], $arRequest['field']);
 
         echo(json_encode([
             'fields' => $arFields,
@@ -45,6 +35,7 @@ if ($oRequest->isPost() && $arRequest['save-data']) {
 }
 ?>
 <script type='text/javascript'>
+    BX.Ylab.Settings = function(){};
     BX.ready(function () {
         var inputOptions = BX.findChild(
             BX(document),
@@ -144,7 +135,7 @@ if ($oRequest->isPost() && $arRequest['save-data']) {
     });
 </script>
 <table class="adm-detail-content-table edit-table">
-    <input type="hidden" name="option[hlblock]" value="<?=$iHLBlock?>">
+    <input type="hidden" name="option[hlblock]" value="<?= $iHLBlock ?>">
     <tr>
         <td width="40%" class="adm-detail-content-cell-l">
             <?= Loc::getMessage('GENERATE_RANDOM') ?>

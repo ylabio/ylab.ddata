@@ -28,12 +28,22 @@ BX.ready(function () {
             );
             var generatorID = optionSelected[optionSelected.selectedIndex].value;
             var propertyName = this.getAttribute('data-name');
+            var hiddenInput = BX.findChild(
+                document,
+                {
+                    attribute: {
+                        'name': propertyName + '[' + generatorID + ']'
+                    }
+                },
+                true,
+                false
+            );
             var propertyCode = this.getAttribute('data-code');
             var propertyProfile = this.getAttribute('data-profile');
             var WindowEntityDataFormParams = {
                 'title': BX.message('YLAB_DDATA_ENTITY_DATA_WINDOW_TITLE'),
                 'content_url': '/bitrix/admin/ylab.ddata_entity_data_form.php?generator=' + generatorID + '&property-name=' + propertyName + '&property-code=' + propertyCode + '&profile_id=' + propertyProfile + '&' + window.location.search.substr(1),
-                'content_post': '',
+                'content_post': hiddenInput.value != null ? JSON.parse(hiddenInput.value) : '',
                 'min_width': 600,
                 'min_height': 500,
                 'draggable': true,

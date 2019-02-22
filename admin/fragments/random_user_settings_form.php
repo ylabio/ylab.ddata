@@ -1,36 +1,27 @@
 <?php
 /**
- * @global $arRequest
- * @global $arOptions
+ * @global $sGeneratorID
+ * @global $sProfileID
  * @global $sPropertyCode
+ * @global $sPropertyName
+ * @global $arGroupList
+ * @global $this
  */
 
 use Bitrix\Main\Localization\Loc;
-use Ylab\Ddata\LoadUnits;
 
 Loc::loadMessages(__FILE__);
 
 global $USER;
-$oRequest = \Bitrix\Main\Application::getInstance()->getContext()->getRequest();
-$sEntityID = $oRequest->get('generator');
-$oClasses = new LoadUnits();
-$arClassesData = $oClasses->getDataUnits();
 
-$arEntity = [];
-foreach ($arClassesData as $arClass) {
-    if ($arClass['ID'] == $sEntityID) {
-        $arData = $arClass;
-    }
-}
-
-$oData = new $arData['CLASS']($sProfileID, $sPropertyCode, $sGeneratorID);
-
-$arSelectedGroups = $oData->arSelectedGroups;
-$sUserChoice = $oData->sUserChoice;
-$iUserID = $oData->iUserID;
-$arUsers = $oData->arUsers;
+$arSelectedGroups = $this->arSelectedGroups;
+$sUserChoice = $this->sUserChoice;
+$iUserID = $this->iUserID;
+$arAllUsers = $this->arAllUsers;
+$arUsers = $this->arUsers;
 ?>
 <script type='text/javascript'>
+    BX.Ylab.Settings = function(){};
     BX.ready(function () {
         var inputOptions = BX.findChild(
             BX(document),
@@ -59,16 +50,16 @@ $arUsers = $oData->arUsers;
                 )[0];
                 if (optionsForm) {
                     optionsForm.value = optionsValue[key];
-                    console.log(optionsForm.value);
                     if (optionsForm.value == 'DEFINED' && key == 'choice') {
                         document.getElementById('choose-user-selector').disabled = false;
-                    } else if(optionsForm.value == 'RANDOM' && key == 'choice') {
+                    } else if (optionsForm.value == 'RANDOM' && key == 'choice') {
                         document.getElementById('choose-user-selector').disabled = true;
                     }
                 }
             });
         }
     });
+
     BX.bind(BX('choose-value-selector'), 'change', function () {
         if (this.value == 'DEFINED') {
             document.getElementById('choose-user-selector').disabled = false;
@@ -77,33 +68,33 @@ $arUsers = $oData->arUsers;
         }
     });
     BX.bind(BX('choose-group-selector'), 'change', function () {
-       var groupValue = this.value;
-       var choiceValue = document.getElementById('choose-user-selector').value;
-       var arUsers = <?=json_encode($arUsers)?>;
-       document.getElementById('choose-user-selector').innerHTML = '';
-       var arResultUsers = [];
-       $arUserGroups = [];
-       arUsers.forEach(function (item, key) {
-           $arUserGroups = arUsers[key]['GROUPS_ID'];
-           if (in_array(groupValue, $arUserGroups)) {
-               arResultUsers.push(arUsers[key]);
-           }
-       });
-       var sSelectHtml = '';
-       arResultUsers.forEach(function(userKey, userValue){
-           sSelectHtml = sSelectHtml +
-               '<option value="' + arResultUsers[userValue]["ID"]+ '">' +
-                    (arResultUsers[userValue]["ID"] || "") + " [" + (arResultUsers[userValue]["LOGIN"] || "") + "] " +
-                    (arResultUsers[userValue]["LAST_NAME"] || "") + (arResultUsers[userValue]["NAME"] || "") +
-               '</option>';
-       });
-       document.getElementById('choose-user-selector').innerHTML = sSelectHtml;
+        var groupValue = this.value;
+        var choiceValue = document.getElementById('choose-user-selector').value;
+        var arAllUsers = <?=json_encode($arAllUsers)?>;
+        document.getElementById('choose-user-selector').innerHTML = '';
+        var arResultUsers = [];
+        var arUserGroups = [];
+        arAllUsers.forEach(function (item, key) {
+            arUserGroups = arAllUsers[key]['GROUPS_ID'];
+            if (in_array(groupValue, arUserGroups)) {
+                arResultUsers.push(arAllUsers[key]);
+            }
+        });
+        var sSelectHtml = '';
+        arResultUsers.forEach(function (userKey, userValue) {
+            sSelectHtml = sSelectHtml +
+                '<option value="' + arResultUsers[userValue]["ID"] + '">' +
+                (arResultUsers[userValue]["ID"] || "") + " [" + (arResultUsers[userValue]["LOGIN"] || "") + "] " +
+                (arResultUsers[userValue]["LAST_NAME"] || "") + (arResultUsers[userValue]["NAME"] || "") +
+                '</option>';
+        });
+        document.getElementById('choose-user-selector').innerHTML = sSelectHtml;
 
     });
 
     function in_array(value, array) {
-        for(var i=0; i<array.length; i++){
-            if(value == array[i]) return true;
+        for (var i = 0; i < array.length; i++) {
+            if (value == array[i]) return true;
         }
         return false;
     }
@@ -121,30 +112,31 @@ $arUsers = $oData->arUsers;
             </select>
         </td>
     </tr>
-        <tr>
-            <td width="40%" class="adm-detail-content-cell-l">
-                <?= Loc::getMessage('SELECT_GROUPS') ?>
-            </td>
-            <td width="60%" class="adm-detail-content-cell-r">
-                <select class="data-option" name="option[selected-group]" size="5" style="width: 50%;" id="choose-group-selector">
-                    <? foreach ($arGroupList as $group): ?>
-                        <option value="<?= $group['ID'] ?>" <?= in_array($group['ID'],
-                            $arSelectedGroups) ? 'selected' : '' ?>><?= $group['NAME'] ?></option>
-                    <? endforeach; ?>
-                </select>
-            </td>
-        </tr>
-        <tr>
-            <td width="40%" class="adm-detail-content-cell-l">
-                <?= Loc::getMessage('SELECT_USER') ?>
-            </td>
-            <td width="60%" class="adm-detail-content-cell-r">
-                <select name="option[user-id]" size="5" disabled="" id="choose-user-selector">
-                    <? foreach ($arUsers as $arUser): ?>
-                        <option value="<?= $arUser['ID'] ?>" <?= $iUserID == $arUser['ID'] ? 'selected' : '' ?>><?= $arUser['LAST_NAME'] . " " . $arUser['NAME'] ?></option>
-                    <? endforeach; ?>
-                </select>
-            </td>
-        </tr>
+    <tr>
+        <td width="40%" class="adm-detail-content-cell-l">
+            <?= Loc::getMessage('SELECT_GROUPS') ?>
+        </td>
+        <td width="60%" class="adm-detail-content-cell-r">
+            <select class="data-option" name="option[selected-group]" size="5" style="width: 50%;"
+                    id="choose-group-selector">
+                <? foreach ($arGroupList as $group): ?>
+                    <option value="<?= $group['ID'] ?>" <?= in_array($group['ID'],
+                        $arSelectedGroups) ? 'selected' : '' ?>><?= $group['NAME'] ?></option>
+                <? endforeach; ?>
+            </select>
+        </td>
+    </tr>
+    <tr>
+        <td width="40%" class="adm-detail-content-cell-l">
+            <?= Loc::getMessage('SELECT_USER') ?>
+        </td>
+        <td width="60%" class="adm-detail-content-cell-r">
+            <select name="option[user-id][]" size="5" disabled="" id="choose-user-selector" multiple>
+                <? foreach ($arAllUsers as $arUser): ?>
+                    <option value="<?= $arUser['ID'] ?>" <?= in_array($arUser['ID'], $arUsers)  ? 'selected' : '' ?>><?= $arUser['ID'] . ' [' . $arUser['LOGIN'] . '] ' . $arUser['LAST_NAME'] . " " . $arUser['NAME'] ?></option>
+                <? endforeach; ?>
+            </select>
+        </td>
+    </tr>
     </tbody>
 </table>

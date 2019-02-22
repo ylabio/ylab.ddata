@@ -1,9 +1,9 @@
 <?php
-require_once($_SERVER["DOCUMENT_ROOT"] . "/bitrix/modules/main/include/prolog_admin_before.php");
+require_once $_SERVER['DOCUMENT_ROOT'] . '/bitrix/modules/main/include/prolog_admin_before.php';
 
 use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
-use Ylab\Ddata\Interfaces\DeleteDataClass;
+use Ylab\Ddata\DeleteDataClass;
 use Ylab\Ddata\LoadUnits;
 
 try {
@@ -17,7 +17,7 @@ try {
     global $APPLICATION;
 
     $POST_RIGHT = $APPLICATION->GetGroupRight(MODULE_ID);
-    if ($POST_RIGHT == "D") {
+    if ($POST_RIGHT == 'D') {
         $APPLICATION->AuthForm(Loc::getMessage('YLAB_DDATA_ACCESS_DENIED'));
     }
 
@@ -37,12 +37,13 @@ try {
             $arEntity = $arClass;
         }
     }
-
+    /**
+     * @var $oEntity \Ylab\Ddata\Interfaces\EntityUnitClass
+     */
     if (!empty($iProfileID)) {
         $oEntity = new $arEntity['CLASS']($iProfileID);
         $arProfile = $oEntity->getProfile($iProfileID);
-        $oGenDataClass = new DeleteDataClass();
-        $arGenData = $oGenDataClass::getGenData($iProfileID);
+        $arGenData = $oEntity->getGenData($iProfileID);
     } else {
         $oEntity = new $arEntity['CLASS'](false);
     }
@@ -52,31 +53,31 @@ try {
         $arEntityFields) && !empty($arEntityFields['PROPERTIES']) ? true : false;
     $aTabs = [
         [
-            "DIV" => "edit1",
-            "TAB" => Loc::getMessage('YLAB_DDATA_TAB_NAME_MAIN'),
-            "ICON" => "main_user_edit",
-            "TITLE" => Loc::getMessage('YLAB_DDATA_TAB_NAME_TITLE')
+            'DIV' => 'edit1',
+            'TAB' => Loc::getMessage('YLAB_DDATA_TAB_NAME_MAIN'),
+            'ICON' => 'main_user_edit',
+            'TITLE' => Loc::getMessage('YLAB_DDATA_TAB_NAME_TITLE')
         ]
     ];
     if ($isSetFields) {
         $aTabs[] =
             [
-                "DIV" => "edit2",
-                "TAB" => Loc::getMessage('YLAB_DDATA_TAB_FIELDS_MAIN'),
-                "ICON" => "main_user_edit",
-                "TITLE" => Loc::getMessage('YLAB_DDATA_TAB_FIELDS_TITLE')
+                'DIV' => 'edit2',
+                'TAB' => Loc::getMessage('YLAB_DDATA_TAB_FIELDS_MAIN'),
+                'ICON' => 'main_user_edit',
+                'TITLE' => Loc::getMessage('YLAB_DDATA_TAB_FIELDS_TITLE')
             ];
     }
     if ($isSetProperties) {
         $aTabs[] =
             [
-                "DIV" => "edit3",
-                "TAB" => Loc::getMessage('YLAB_DDATA_TAB_PROPERTIES_MAIN'),
-                "ICON" => "main_user_edit",
-                "TITLE" => Loc::getMessage('YLAB_DDATA_TAB_PROPERTIES_TITLE')
+                'DIV' => 'edit3',
+                'TAB' => Loc::getMessage('YLAB_DDATA_TAB_PROPERTIES_MAIN'),
+                'ICON' => 'main_user_edit',
+                'TITLE' => Loc::getMessage('YLAB_DDATA_TAB_PROPERTIES_TITLE')
             ];
     }
-    $tabControl = new CAdminTabControl("tabControl", $aTabs);
+    $tabControl = new CAdminTabControl('tabControl', $aTabs);
 
     if ($iProfileID) {
         $APPLICATION->SetTitle(Loc::getMessage('YLAB_DDATA_PAGE_TITLE_EDIT', ["#NAME_PROFILE#" => $arProfile['NAME']]));
@@ -85,11 +86,11 @@ try {
     }
 
     if (
-        $request->getRequestMethod() == "POST" // проверка метода вызова страницы
+        $request->getRequestMethod() == 'POST' // проверка метода вызова страницы
         &&
-        ($save != "" || $apply != "" || $generate != "" || $delete != "") // проверка нажатия кнопок "Сохранить" и "Применить" и "Генерировать"
+        ($save != '' || $apply != '' || $generate != '' || $delete != '') // проверка нажатия кнопок "Сохранить" и "Применить" и "Генерировать"
         &&
-        $POST_RIGHT == "W"          // проверка наличия прав на запись для модуля
+        $POST_RIGHT == 'W'          // проверка наличия прав на запись для модуля
         &&
         check_bitrix_sessid()     // проверка идентификатора сессии
     ) {
@@ -131,16 +132,15 @@ try {
         $entityId = $entityId['entity_id'];
 
         if (!empty($save)) {
-            LocalRedirect("/bitrix/admin/ylab.ddata_entity_profile_list.php?lang=" . LANGUAGE_ID);
+            LocalRedirect('/bitrix/admin/ylab.ddata_entity_profile_list.php?lang=' . LANGUAGE_ID);
         } else {
             if (!empty($apply)) {
-                LocalRedirect("/bitrix/admin/ylab.ddata_entity_profile_edit.php?PROFILE[ID]=" . $iProfileID . "&prepare[entity_id]=" . $entityId);
+                LocalRedirect('/bitrix/admin/ylab.ddata_entity_profile_edit.php?PROFILE[ID]=' . $iProfileID . '&prepare[entity_id]=' . $entityId);
             } else {
                 if (!empty($generate)) {
-                    LocalRedirect("/bitrix/admin/ylab.ddata_entity_profile_gen.php?ID=" . $iProfileID . "&entity_id=" . $entityId . "&lang=" . LANGUAGE_ID);
+                    LocalRedirect('/bitrix/admin/ylab.ddata_entity_profile_gen.php?ID=' . $iProfileID . '&entity_id=' . $entityId . '&lang=' . LANGUAGE_ID);
                 } elseif (!empty($delete)) {
-                    $oGenDataClass = new DeleteDataClass();
-                    $oGenDataClass::deleteGenData($iProfileID);
+                    $oEntity->deleteGenData();
                 }
             }
         }
@@ -149,15 +149,14 @@ try {
 } catch (\Exception $e) {
     $error = $e->getMessage();
 }
-require($_SERVER["DOCUMENT_ROOT"] . "/bitrix/modules/main/include/prolog_admin_after.php");
+require $_SERVER['DOCUMENT_ROOT'] . '/bitrix/modules/main/include/prolog_admin_after.php';
 if (isset($error)) {
     CAdminMessage::ShowMessage([
-        "MESSAGE" => $error,
-        "TYPE" => "ERROR",
+        'MESSAGE' => $error,
+        'TYPE' => 'ERROR',
     ]);
 }
-CJSCore::Init(['WindowEntityDataForm']);
-CJSCore::Init(['ErrorChecking']);
+CJSCore::Init(['WindowEntityDataForm', 'ErrorChecking', 'SettingsForm']);
 /**
  * Вспомогательный метод для группировки свойств
  * @param $arProperties
@@ -375,6 +374,7 @@ function getBasePropertyHTML($arProperties, $arProfile, $arClassesData, $iProfil
                         <input type="hidden"
                                name="FIELDS[<?= $sFieldName ?>][<?= $arFieldOptions['DATA_ID'] ?>]"
                                value='<?= $arFieldOptions['OPTIONS'] ?>'
+                               id="<?= $arFieldOptions['DATA_ID'] ?>"
                                class="options-input">
                     <? endif; ?>
                     <? if ($arField['multiple']): ?>
@@ -420,8 +420,8 @@ function getBasePropertyHTML($arProperties, $arProfile, $arClassesData, $iProfil
     <?
     $tabControl->Buttons(
         array(
-            "disabled" => ($POST_RIGHT < "W"),
-            "back_url" => "ylab.ddata_entity_profile_list.php?lang=" . LANG,
+            'disabled' => ($POST_RIGHT < 'W'),
+            'back_url' => 'ylab.ddata_entity_profile_list.php?lang=' . LANG,
         )
     );
     ?>
@@ -441,4 +441,4 @@ echo Loc::getMessage('YLAB_DDATA_ADVERTISING_GIT');
 echo '</div>';
 echo EndNote();
 ?>
-<? require($_SERVER["DOCUMENT_ROOT"] . "/bitrix/modules/main/include/epilog_admin.php"); ?>
+<? require $_SERVER['DOCUMENT_ROOT'] . '/bitrix/modules/main/include/epilog_admin.php'; ?>

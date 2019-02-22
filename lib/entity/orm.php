@@ -2,17 +2,20 @@
 
 namespace Ylab\Ddata\Entity;
 
+use Bitrix\Main\Application;
 use Bitrix\Main\Entity;
 use Bitrix\Main\HttpRequest;
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\Type\DateTime;
 use Ylab\Ddata\Interfaces\EntityUnitClass;
 use Ylab\Ddata\Helpers;
+use Ylab\Ddata\Orm\DataUnitGenElementsTable;
 
 Loc::loadMessages(__FILE__);
 
 /**
  * Class Orm
+ *
  * @package Ylab\Ddata\entity
  */
 class Orm extends EntityUnitClass
@@ -27,20 +30,22 @@ class Orm extends EntityUnitClass
      *
      * @return array
      */
-    public static function getDescription()
+    public function getDescription()
     {
         return [
-            "ID" => "orm",
-            "NAME" => Loc::getMessage('YLAB_DDATA_ORM_ENTITY_NAME'),
-            "DESCRIPTION" => Loc::getMessage('YLAB_DDATA_ORM_ENTITY_DESCRIPTION'),
-            "TYPE" => "orm",
-            "CLASS" => __CLASS__
+            'ID' => 'orm',
+            'NAME' => Loc::getMessage('YLAB_DDATA_ORM_ENTITY_NAME'),
+            'DESCRIPTION' => Loc::getMessage('YLAB_DDATA_ORM_ENTITY_DESCRIPTION'),
+            'TYPE' => 'orm',
+            'CLASS' => __CLASS__
         ];
     }
 
     /**
      * Orm constructor.
+     *
      * @param $iProfileID
+     *
      * @throws \Bitrix\Main\ArgumentException
      * @throws \Bitrix\Main\SystemException
      */
@@ -54,7 +59,7 @@ class Orm extends EntityUnitClass
 
         if (!empty($this->profile['FIELDS'])) {
             $arTmp = [];
-            $arFields = self::getFields();
+            $arFields = $this->getFields();
 
             foreach ($this->profile['FIELDS'] as $arField) {
                 if (isset($arFields['FIELDS'][$arField['FIELD_CODE']])) {
@@ -72,16 +77,18 @@ class Orm extends EntityUnitClass
 
     /**
      * @inheritdoc
+     *
      * @param HttpRequest $oRequest
+     *
      * @return string
      * @throws \Bitrix\Main\LoaderException
      */
-    public static function getPrepareForm(HttpRequest $oRequest)
+    public function getPrepareForm(HttpRequest $oRequest)
     {
         $arPrepareRequest = $oRequest->get('prepare');
 
         ob_start();
-        include Helpers::getModulePath() . "/admin/fragments/orm_prepare_form.php";
+        include Helpers::getModulePath() . '/admin/fragments/orm_prepare_form.php';
         $tpl = ob_get_contents();
         ob_end_clean();
         return $tpl;
@@ -89,17 +96,19 @@ class Orm extends EntityUnitClass
 
     /**
      * @inheritdoc
+     *
      * @param HttpRequest $oRequest
+     *
      * @return boolean
      */
-    public static function isValidPrepareForm(HttpRequest $oRequest)
+    public function isValidPrepareForm(HttpRequest $oRequest)
     {
         $arPrepareRequest = $oRequest->get('prepare');
 
         if (!empty($arPrepareRequest['namespace']) && class_exists($arPrepareRequest['namespace'], true)) {
             $oCheckClass = new $arPrepareRequest['namespace'];
-            if($oCheckClass instanceof \Bitrix\Main\Entity\DataManager) {
-                
+            if ($oCheckClass instanceof \Bitrix\Main\Entity\DataManager) {
+
                 return true;
             }
         }
@@ -109,7 +118,9 @@ class Orm extends EntityUnitClass
 
     /**
      * @inheritdoc
+     *
      * @param HttpRequest|null $oRequest
+     *
      * @return array
      */
     public function getFields(HttpRequest $oRequest = null)
@@ -166,18 +177,28 @@ class Orm extends EntityUnitClass
                     if (array_key_exists('required', $arField) && $arField['required'] == true) {
                         $arResult['FIELDS'][$key]['required'] = true;
                     }
-                    if ($arField['data_type'] == 'string') {
-                        $arResult['FIELDS'][$key]['type'] = ['string', 'integer'];
-                    } elseif ($arField['data_type'] == 'text') {
-                        $arResult['FIELDS'][$key]['type'] = ['string'];
-                    } elseif ($arField['data_type'] == 'integer') {
-                        $arResult['FIELDS'][$key]['type'] = ['integer', 'file.orm'];
-                    } elseif ($arField['data_type'] == 'date' || $arField['data_type'] == 'datetime') {
-                        $arResult['FIELDS'][$key]['type'] = ['datetime'];
-                    } elseif ($arField['data_type'] == 'boolean') {
-                        $arResult['FIELDS'][$key]['type'] = ['enum'];
-                    } else {
-                        $arResult['FIELDS'][$key]['type'] = [$arField['data_type']];
+                    switch ($arField['data_type']) {
+                        case 'string':
+                            $arResult['FIELDS'][$key]['type'] = ['string', 'integer'];
+                            break;
+                        case 'text':
+                            $arResult['FIELDS'][$key]['type'] = ['string'];
+                            break;
+                        case 'integer':
+                            $arResult['FIELDS'][$key]['type'] = ['integer', 'file.orm'];
+                            break;
+                        case 'date':
+                            $arResult['FIELDS'][$key]['type'] = ['datetime'];
+                            break;
+                        case 'datetime':
+                            $arResult['FIELDS'][$key]['type'] = ['datetime'];
+                            break;
+                        case 'boolean':
+                            $arResult['FIELDS'][$key]['type'] = ['enum'];
+                            break;
+                        default:
+                            $arResult['FIELDS'][$key]['type'] = [$arField['data_type']];
+                            break;
                     }
                 }
             }
@@ -232,15 +253,53 @@ class Orm extends EntityUnitClass
 
     /**
      * Вспомогательный метод для записи даты
+     *
      * @param $value
+     *
      * @return DateTime
+     * @throws \Exception
      */
     public function saveDataModificationDate($value)
     {
         if ($value instanceof DateTime) {
             return $value;
-        } else {
-            return DateTime::createFromPhp(new \DateTime($value));
         }
+
+        return DateTime::createFromPhp(new \DateTime($value));
+    }
+
+    /**
+     * Удаление сгенерированных данных
+     *
+     * @return mixed
+     * @throws \Bitrix\Main\ArgumentException
+     * @throws \Bitrix\Main\Db\SqlQueryException
+     * @throws \Bitrix\Main\ObjectPropertyException
+     * @throws \Bitrix\Main\SystemException
+     * @throws \Exception
+     */
+    public function deleteGenData()
+    {
+        $arGenData = $this->getGenData();
+        $connection = Application::getConnection();
+        $connection->startTransaction();
+
+        $sOrmNamespace = $this->sOrmNamespace;
+        foreach ($arGenData as $arGenDatum) {
+            $oResult = $sOrmNamespace::delete($arGenDatum['GEN_ELEMENT_ID']);
+            if (!$oResult->isSuccess()) {
+                $connection->rollbackTransaction();
+                throw new \Exception(Loc::getMessage('YLAB_DDATA_DELETE_DATA_OPTION_ERR_DELETE',
+                    ['#ELEMENT_ID#' => $arGenDatum['GEN_ELEMENT_ID']]));
+            }
+            $oResult = DataUnitGenElementsTable::delete($arGenDatum['ID']);
+            if (!$oResult->isSuccess()) {
+                $connection->rollbackTransaction();
+                throw new \Exception(Loc::getMessage('YLAB_DDATA_DELETE_DATA_OPTION_ERR_DELETE',
+                    ['#ELEMENT_ID#' => $arGenDatum['ID']]));
+            }
+        }
+
+        $connection->commitTransaction();
     }
 }

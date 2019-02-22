@@ -25,6 +25,10 @@ $arJsLibs = [
         'js' => '/bitrix/themes/ylab.ddata/js/ImportProfile.js',
         'lang' => '/bitrix/themes/ylab.ddata/lang/' . LANGUAGE_ID . '/ImportProfile.php',
         'rel' => ['ajax']
+    ],
+    'SettingsForm' => [
+        'js' => '/bitrix/themes/ylab.ddata/js/SettingsForm.js',
+        'lang' => '/bitrix/themes/ylab.ddata/lang/' . LANGUAGE_ID . '/SettingsForm.php'
     ]
 ];
 

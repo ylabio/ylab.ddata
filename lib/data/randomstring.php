@@ -10,31 +10,42 @@ use Ylab\Ddata\Helpers;
 Loc::loadLanguageFile(__FILE__);
 
 /**
+ * Генерация случайной строки
+ *
  * Class RandomString
+ *
  * @package Ylab\Ddata\Data
  */
 class RandomString extends DataUnitClass
 {
-    private static $bCheckStaticMethod = true;
-
+    /** @var string $sLang Язык строки по умолчанию */
     protected $sLang = "EN";
+
+    /** @var int $iMinLength Минимальная длина строки по умолчанию */
     protected $iMinLength = 6;
+
+    /** @var int $iMaxLength Максимальная длина строки по умолчанию */
     protected $iMaxLength = 255;
+
+    /** @var string $sRegister Учитывать регистр или нет */
     protected $sRegister = 'N';
+
+    /** @var string $sUserString */
     protected $sUserString = '';
 
     /**
      * RandomString constructor.
-     * @param $sProfileID
-     * @param $sFieldCode
-     * @param $sGeneratorID
+     *
+     * @param $sProfileID   - ID профиля
+     * @param $sFieldCode   - Симфольный код свойства
+     * @param $sGeneratorID - ID уже сохраненного генератора
+     *
      * @throws \Bitrix\Main\ArgumentException
      * @throws \Bitrix\Main\ObjectPropertyException
      * @throws \Bitrix\Main\SystemException
      */
     public function __construct($sProfileID, $sFieldCode, $sGeneratorID)
     {
-        self::$bCheckStaticMethod = false;
         parent::__construct($sProfileID, $sFieldCode, $sGeneratorID);
 
         if (!empty($this->options['lang'])) {
@@ -59,9 +70,11 @@ class RandomString extends DataUnitClass
     }
 
     /**
+     * Метод возврящает массив описывающий тип данных. ID, Имя, scalar type php
+     *
      * @return array
      */
-    public static function getDescription()
+    public function getDescription()
     {
         return [
             "ID" => "random.string.unit",
@@ -73,13 +86,16 @@ class RandomString extends DataUnitClass
     }
 
     /**
+     * Метод возвращает html строку формы с настройкой генератора если таковые необходимы
+     *
      * @param HttpRequest $request
+     *
      * @return mixed|string
      * @throws \Bitrix\Main\ArgumentException
      * @throws \Bitrix\Main\ObjectPropertyException
      * @throws \Bitrix\Main\SystemException
      */
-    public static function getOptionForm(HttpRequest $request)
+    public function getOptionForm(HttpRequest $request)
     {
         $arRequest = $request->toArray();
         $arOptions = (array)$arRequest['option'];
@@ -88,7 +104,7 @@ class RandomString extends DataUnitClass
         $sProfileID = $request->get('profile_id');
         $sPropertyName = $request->get('property-name');
 
-        $arOptions = array_merge(self::getOptions($sGeneratorID, $sProfileID, $sFieldID), $arOptions);
+        $arOptions = array_merge($this->getOptions($sGeneratorID, $sProfileID, $sFieldID), $arOptions);
         ob_start();
         include Helpers::getModulePath() . "/admin/fragments/random_string_settings_form.php";
         $tpl = ob_get_contents();
@@ -98,10 +114,13 @@ class RandomString extends DataUnitClass
     }
 
     /**
+     * Метод проверяет на валидность данные настройки генератора
+     *
      * @param HttpRequest $request
+     *
      * @return bool
      */
-    public static function isValidateOptions(HttpRequest $request)
+    public function isValidateOptions(HttpRequest $request)
     {
         $arPrepareRequest = $request->get('option');
         $bFlag = false;
@@ -127,69 +146,67 @@ class RandomString extends DataUnitClass
     }
 
     /**
+     * Возвращает случайную запись соответствующего типа
+     *
      * @return string
      * @throws \Exception
      */
     public function getValue()
     {
-        if (!self::$bCheckStaticMethod) {
-            if ($this->sUserString) {
-                return $this->sUserString;
+        if ($this->sUserString) {
+            return $this->sUserString;
+        }
+
+        $sLang = $this->sLang;
+        $iMinLength = $this->iMinLength;
+        $iMaxLength = $this->iMaxLength;
+        $sRegister = $this->sRegister;
+
+        $sCyrillic = "абвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ";
+        $sLatin = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+        if ($sLang == 'RU') {
+            $iSize = strlen($sCyrillic) - 1;
+            $iStringLength = rand($iMinLength, $iMaxLength);
+            $sResult = '';
+
+            while (strlen($sResult) < $iStringLength) {
+                $sResult .= mb_substr($sCyrillic, rand(0, $iSize - 1), 1);
             }
 
-            $sLang = $this->sLang;
-            $iMinLength = $this->iMinLength;
-            $iMaxLength = $this->iMaxLength;
-            $sRegister = $this->sRegister;
-
-            $sCyrillic = "абвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ";
-            $sLatin = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-            if ($sLang == 'RU') {
-                $iSize = strlen($sCyrillic) - 1;
-                $iStringLength = rand($iMinLength, $iMaxLength);
-                $sResult = '';
-
-                while (strlen($sResult) < $iStringLength) {
-                    $sResult .= mb_substr($sCyrillic, rand(0, $iSize - 1), 1);
-                }
-
-                switch ($sRegister) {
-                    case 'UP':
-                        $sResult = strtoupper($sResult);
-                        break;
-                    case 'LOW':
-                        $sResult = strtolower($sResult);
-                        break;
-                    case 'NO':
-                        break;
-                }
-
-                return $sResult;
-            } elseif ($sLang == 'EN') {
-                $iSize = strlen($sLatin) - 1;
-                $iStringLength = rand($iMinLength, $iMaxLength);
-                $sResult = '';
-
-                while (strlen($sResult) < $iStringLength) {
-                    $sResult .= $sLatin[rand(0, $iSize)];
-                }
-
-                switch ($sRegister) {
-                    case 'UP':
-                        $sResult = strtoupper($sResult);
-                        break;
-                    case 'LOW':
-                        $sResult = strtolower($sResult);
-                        break;
-                    case 'NO':
-                        break;
-                }
-
-                return $sResult;
+            switch ($sRegister) {
+                case 'UP':
+                    $sResult = strtoupper($sResult);
+                    break;
+                case 'LOW':
+                    $sResult = strtolower($sResult);
+                    break;
+                case 'NO':
+                    break;
             }
-        } else {
-            throw new \Exception(Loc::getMessage('YLAB_DDATA_DATA_UNIT_STRING_EXCEPTION_STATIC'));
+
+            return $sResult;
+        } elseif ($sLang == 'EN') {
+            $iSize = strlen($sLatin) - 1;
+            $iStringLength = rand($iMinLength, $iMaxLength);
+            $sResult = '';
+
+            while (strlen($sResult) < $iStringLength) {
+                $sResult .= $sLatin[rand(0, $iSize)];
+            }
+
+            switch ($sRegister) {
+                case 'UP':
+                    $sResult = strtoupper($sResult);
+                    break;
+                case 'LOW':
+                    $sResult = strtolower($sResult);
+                    break;
+                case 'NO':
+                    break;
+            }
+
+            return $sResult;
         }
     }
 }

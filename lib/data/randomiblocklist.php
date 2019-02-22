@@ -1,4 +1,4 @@
-<?
+<?php
 
 namespace Ylab\Ddata\Data;
 
@@ -13,29 +13,31 @@ use Ylab\Ddata\Interfaces\DataUnitClass;
 Loc::loadMessages(__FILE__);
 
 /**
+ * Генерация случайного элемента списка
+ *
  * Class RandomIBlockList
  * @package Ylab\Ddata\Data
  */
 class RandomIBlockList extends DataUnitClass
 {
-    private static $bCheckStaticMethod = true;
-
     protected $sRandom = 'Y';
+
+    /** @var array $arItemsRandom */
     protected $arItemsRandom = [];
+
+    /** @var array $arSelectedItems */
     protected $arSelectedItems = [];
 
     /**
      * RandomIBlockList constructor.
-     * @param $sProfileID
-     * @param $sFieldCode
-     * @param $sGeneratorID
+     * @param $sProfileID - ID профиля
+     * @param $sFieldCode - Симфольный код свойства
+     * @param $sGeneratorID - ID уже сохраненного генератора
      * @throws \Bitrix\Main\ArgumentException
      * @throws \Exception
      */
-    public function __construct($sProfileID, $sFieldCode, $sGeneratorID)
+    public function __construct(string $sProfileID = '', string $sFieldCode = '', string $sGeneratorID = '')
     {
-        self::$bCheckStaticMethod = false;
-
         parent::__construct($sProfileID, $sFieldCode, $sGeneratorID);
 
         if (!empty($this->options['selected-items'])) {
@@ -46,7 +48,7 @@ class RandomIBlockList extends DataUnitClass
             $this->sRandom = $this->options['random'];
 
             if ($this->sRandom == 'Y') {
-                $iIblockId = static::getIblockId($sProfileID);
+                $iIblockId = $this->getIblockId($sProfileID);
                 if (strpos($sFieldCode, "YLAB_DDATA_OFFER_") !== false) {
                     Loader::includeModule('catalog');
                     $sFieldCode = substr($sFieldCode, strlen("YLAB_DDATA_OFFER_"));
@@ -58,14 +60,14 @@ class RandomIBlockList extends DataUnitClass
                     throw new \Exception(Loc::getMessage('YLAB_DDATA_DATA_IBLOCK_SECTION_EXCEPTION_IBLOC_ID'));
                 }
 
-                $this->arItemsRandom = static::getItemList($iIblockId, $sFieldCode);
+                $this->arItemsRandom = $this->getItemList($iIblockId, $sFieldCode);
             }
         } else {
             if ($this->sRandom == 'Y') {
-                $iIblockId = static::getIblockId($sProfileID);
+                $iIblockId = $this->getIblockId($sProfileID);
                 if (strpos($sFieldCode, "YLAB_DDATA_OFFER_") !== false) {
                     Loader::includeModule('catalog');
-                    $sFieldCode = substr($sFieldCode, strlen("YLAB_DDATA_OFFER_"));
+                    $sFieldCode = substr($sFieldCode, strlen('YLAB_DDATA_OFFER_'));
                     $arOfferInfo = \CCatalogSKU::GetInfoByProductIBlock($iIblockId);
                     $iIblockId = $arOfferInfo['IBLOCK_ID'];
                 }
@@ -74,46 +76,45 @@ class RandomIBlockList extends DataUnitClass
                     throw new \Exception(Loc::getMessage('YLAB_DDATA_DATA_IBLOCK_SECTION_EXCEPTION_IBLOC_ID'));
                 }
 
-                $this->arItemsRandom = static::getItemList($iIblockId, $sFieldCode);
+                $this->arItemsRandom = $this->getItemList($iIblockId, $sFieldCode);
             }
         }
     }
 
     /**
+     * Метод возврящает массив описывающий тип данных. ID, Имя, scalar type php
+     *
      * @return array
      */
-    public static function getDescription()
+    public function getDescription()
     {
         return [
-            "ID" => "iblock.list",
-            "NAME" => Loc::getMessage("YLAB_DDATA_DATA_IBLOCK_LIST_NAME"),
-            "DESCRIPTION" => Loc::getMessage("YLAB_DDATA_DATA_IBLOCK_LIST_DESCRIPTION"),
-            "TYPE" => "iblock.list",
-            "CLASS" => __CLASS__
+            'ID' => 'iblock.list',
+            'NAME' => Loc::getMessage('YLAB_DDATA_DATA_IBLOCK_LIST_NAME'),
+            'DESCRIPTION' => Loc::getMessage("YLAB_DDATA_DATA_IBLOCK_LIST_DESCRIPTION"),
+            'TYPE' => 'iblock.list',
+            'CLASS' => __CLASS__
         ];
     }
 
     /**
+     * Метод возвращает html строку формы с настройкой генератора если таковые необходимы
+     *
      * @param HttpRequest $request
      * @return string
      * @throws \Exception
      */
-    public static function getOptionForm(HttpRequest $request)
+    public function getOptionForm(HttpRequest $request)
     {
-        $arRequest = $request->toArray();
-        $arOptions = (array)$arRequest['option'];
         $sGeneratorID = $request->get('generator');
-        $sFieldID = $request->get('field');
         $sProfileID = $request->get('profile_id');
         $sPropertyName = $request->get('property-name');
-
-        $arOptions = array_merge(self::getOptions($sGeneratorID, $sProfileID, $sFieldID), $arOptions);
 
         $arIblockId = $request->get('prepare');
         $iIblockId = $arIblockId['iblock_id'];
 
         if (empty($iIblockId)) {
-            $iIblockId = static::getIblockId($sProfileID);
+            $iIblockId = $this->getIblockId($sProfileID);
 
             if (empty($iIblockId)) {
                 throw new \Exception(Loc::getMessage('YLAB_DDATA_DATA_IBLOCK_LIST_EXCEPTION_IBLOC_ID'));
@@ -128,7 +129,7 @@ class RandomIBlockList extends DataUnitClass
             $arOfferInfo = \CCatalogSKU::GetInfoByProductIBlock($iIblockId);
             $iIblockId = $arOfferInfo['IBLOCK_ID'];
         }
-        $arItemList = static::getItemList($iIblockId, $sPropertyCode);
+        $arItemList = $this->getItemList($iIblockId, $sPropertyCode);
 
         ob_start();
         include Helpers::getModulePath() . '/admin/fragments/random_iblock_list_settings_form.php';
@@ -139,10 +140,12 @@ class RandomIBlockList extends DataUnitClass
     }
 
     /**
+     * Метод проверяет на валидность данные настройки генератора
+     *
      * @param HttpRequest $request
      * @return bool
      */
-    public static function isValidateOptions(HttpRequest $request)
+    public  function isValidateOptions(HttpRequest $request)
     {
         $arPrepareRequest = $request->get('option');
 
@@ -154,36 +157,38 @@ class RandomIBlockList extends DataUnitClass
                 return true;
             }
         }
+
+        return false;
     }
 
     /**
+     * Возвращает случайную запись соответствующего типа
+     *
      * @return mixed|string
      * @throws \Exception
      */
     public function getValue()
     {
-        if (!self::$bCheckStaticMethod) {
-            if ($this->sRandom === 'Y') {
-                if ($this->arItemsRandom) {
-                    return array_rand($this->arItemsRandom);
-                }
-            } else {
-                if ($this->arSelectedItems) {
-                    $sResult = array_rand($this->arSelectedItems);
-
-                    return $this->arSelectedItems[$sResult];
-                }
+        if ($this->sRandom === 'Y') {
+            if ($this->arItemsRandom) {
+                return array_rand($this->arItemsRandom);
             }
-
-            return '';
         } else {
-            throw new \Exception(Loc::getMessage('YLAB_DDATA_DATA_IBLOCK_SECTION_EXCEPTION_STATIC'));
+            if ($this->arSelectedItems) {
+                $sResult = array_rand($this->arSelectedItems);
+
+                return $this->arSelectedItems[$sResult];
+            }
         }
+
+        return '';
     }
 
     /**
-     * @param int $iIblockId
-     * @param string $sCode
+     * Получение значений множественного списка
+     *
+     * @param int $iIblockId - ID ифоблока
+     * @param string $sCode - Символьный код свойства
      * @return array
      */
     private function getItemList($iIblockId = 0, $sCode = "")
@@ -191,8 +196,8 @@ class RandomIBlockList extends DataUnitClass
         $arItems = [];
 
         if ($iIblockId && $sCode && \CModule::IncludeModule('iblock')) {
-            $oItemEnum = \CIBlockPropertyEnum::GetList([], ["IBLOCK_ID" => $iIblockId, "CODE" => $sCode]);
-            while ($arItemEnum = $oItemEnum->fetch()) {
+            $oItemEnum = \CIBlockPropertyEnum::GetList([], ['IBLOCK_ID' => $iIblockId, 'CODE' => $sCode]);
+            while ($arItemEnum = $oItemEnum->Fetch()) {
                 $arItems[$arItemEnum['ID']] = $arItemEnum['VALUE'];
             }
         }
@@ -201,11 +206,11 @@ class RandomIBlockList extends DataUnitClass
     }
 
     /**
+     * Получение ID инфоблока из настроек профиля
+     *
      * @param $sProfileID
      * @return bool
      * @throws \Bitrix\Main\ArgumentException
-     * @throws \Bitrix\Main\ObjectPropertyException
-     * @throws \Bitrix\Main\SystemException
      */
     private function getIblockId($sProfileID)
     {

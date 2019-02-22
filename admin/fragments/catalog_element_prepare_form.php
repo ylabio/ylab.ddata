@@ -1,4 +1,4 @@
-<?
+<?php
 /**
  * @global $arCatalog
  * @global $arCatalogTypes

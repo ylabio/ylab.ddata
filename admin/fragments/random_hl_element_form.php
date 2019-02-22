@@ -1,45 +1,34 @@
-<?
+<?php
 /**
+ * @global $request
  * @global $arRequest
- * @global $arOptions
+ * @global $sGeneratorID
+ * @global $sProfileID
  * @global $sPropertyCode
+ * @global $sPropertyName
+ * @global $this
  */
 
 use Bitrix\Main\Localization\Loc;
-use Ylab\Ddata\LoadUnits;
 
 Loc::loadMessages(__FILE__);
 
-$oRequest = \Bitrix\Main\Application::getInstance()->getContext()->getRequest();
-$arRequest = $oRequest->toArray();
-$sEntityID = $oRequest->get('generator');
-$oClasses = new LoadUnits();
-$arClassesData = $oClasses->getDataUnits();
-
-$arEntity = [];
-foreach ($arClassesData as $arClass) {
-    if ($arClass['ID'] == $sEntityID) {
-        $arData = $arClass;
-    }
-}
-
-$oData = new $arData['CLASS']($sProfileID, $sPropertyCode, $sGeneratorID);
-$arHLBlocks = $oData->arHLBlocks;
+$arHLBlocks = $this->arHLBlocks;
 
 $arFields = [];
-if ($oRequest->isPost()) {
+if ($request->isPost()) {
     if (!empty($arRequest['option']['hlblock'])) {
-        $arFields = $oData::getHLBlockFields($arRequest['option']['hlblock']);
+        $arFields = $this::getHLBlockFields($arRequest['option']['hlblock']);
         if (isset($arRequest['option']['field']) && $arRequest['option']['field'] != "") {
-            $arFieldElements = $oData::getHLBlockElements($arRequest['option']['hlblock'], $arFields[$arRequest['option']['field']]);
+            $arFieldElements = $this::getHLBlockElements($arRequest['option']['hlblock'], $arFields[$arRequest['option']['field']]);
         }
     }
 }
 
-if ($oRequest->isPost() && $arRequest['save-data']) {
+if ($request->isPost() && $arRequest['save-data']) {
     if (isset($arRequest['hlblock']) && $arRequest['hlblock'] != '') {
-        $arFields = $oData::getHLBlockFields($arRequest['hlblock']);
-        $arFieldElements = $oData::getHLBlockElements($arRequest['hlblock'], $arRequest['field']);
+        $arFields = $this::getHLBlockFields($arRequest['hlblock']);
+        $arFieldElements = $this::getHLBlockElements($arRequest['hlblock'], $arRequest['field']);
 
         echo(json_encode([
             'fields' => $arFields,
@@ -50,6 +39,7 @@ if ($oRequest->isPost() && $arRequest['save-data']) {
 }
 ?>
 <script type='text/javascript'>
+    BX.Ylab.Settings = function(){};
     BX.ready(function () {
         var inputOptions = BX.findChild(
             BX(document),

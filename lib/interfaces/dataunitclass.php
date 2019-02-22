@@ -6,14 +6,16 @@ use Bitrix\Main\Web\Json;
 use Bitrix\Main\Application;
 use Ylab\Ddata\Orm\DataUnitOptionsTable;
 use Bitrix\Main\Localization\Loc;
+use Bitrix\Main\HttpRequest;
 
 Loc::loadMessages(__FILE__);
 
 /**
  * Class DataUnitClass
+ *
  * @package Ylab\Ddata\Interfaces
  */
-abstract class DataUnitClass implements GenDataUnit
+abstract class DataUnitClass
 {
     /**
      * @var array|mixed
@@ -21,32 +23,69 @@ abstract class DataUnitClass implements GenDataUnit
     public $options = [];
 
     /**
+     * Метод возврящает описывающий массив
+     *
+     * @return array
+     */
+    public abstract function getDescription();
+
+    /**
      * DataUnitClass constructor.
+     *
      * @param $sProfileID
      * @param $sFieldCode
      * @param $sGeneratorID
+     *
      * @throws \Bitrix\Main\ArgumentException
-     * @throws \Bitrix\Main\ObjectPropertyException
-     * @throws \Bitrix\Main\SystemException
      */
     public function __construct($sProfileID, $sFieldCode, $sGeneratorID)
     {
-        $this->options = self::getOptions($sProfileID, $sFieldCode, $sGeneratorID);
+        if (!empty($sProfileID) && !empty($sFieldCode) && !empty($sGeneratorID)) {
+            $this->options = $this->getOptions($sProfileID, $sFieldCode, $sGeneratorID);
+        }
     }
 
     /**
-     * @param $sProfileID
-     * @param $sFieldCode
-     * @param $sGeneratorID
-     * @param $sJsonOptions
+     * Метод getOptionForm возвращает html строку формы с настройкой генератора если таковые необходимы
+     *
+     * @param HttpRequest $request
+     *
+     * @return mixed
+     */
+    abstract public function getOptionForm(HttpRequest $request);
+
+    /**
+     * Метод isValidateOptions проверяет на валидность данные настройки генератора
+     *
+     * @param HttpRequest $request
+     *
+     * @return mixed
+     */
+    abstract public function isValidateOptions(HttpRequest $request);
+
+    /**
+     * Метод возвращает случайные данные соответствующего типа
+     *
+     * @return mixed
+     */
+    abstract public function getValue();
+
+    /**
+     * Метод setOptions записывает параметры типа данных
+     *
+     * @param     $sProfileID
+     * @param     $sFieldCode
+     * @param     $sGeneratorID
+     * @param     $sJsonOptions
      * @param int $iCount
+     *
      * @return array|bool|int
      * @throws \Bitrix\Main\ArgumentException
      * @throws \Bitrix\Main\Db\SqlQueryException
      * @throws \Bitrix\Main\ObjectPropertyException
      * @throws \Bitrix\Main\SystemException
      */
-    public static function setOptions($sProfileID, $sFieldCode, $sGeneratorID, $sJsonOptions, $iCount = 1)
+    public function setOptions($sProfileID, $sFieldCode, $sGeneratorID, $sJsonOptions, $iCount = 1)
     {
         $connection = Application::getConnection();
         $objOptionRow = DataUnitOptionsTable::getList([
@@ -96,15 +135,18 @@ abstract class DataUnitClass implements GenDataUnit
     }
 
     /**
+     * Метод getOptions получает параметры типа данных
+     *
      * @param $sProfileID
      * @param $sFieldCode
      * @param $sGeneratorID
+     *
      * @return array|mixed
      * @throws \Bitrix\Main\ArgumentException
      * @throws \Bitrix\Main\ObjectPropertyException
      * @throws \Bitrix\Main\SystemException
      */
-    public static function getOptions($sProfileID, $sFieldCode, $sGeneratorID)
+    public function getOptions($sProfileID, $sFieldCode, $sGeneratorID)
     {
         if ($sGeneratorID && $sProfileID && $sFieldCode) {
             $optionsJSON = DataUnitOptionsTable::getList([
@@ -126,16 +168,17 @@ abstract class DataUnitClass implements GenDataUnit
     }
 
     /**
-     * Удаление параметров типа данных
+     * Метод deleteOptions удаляет параметры типа данных
      *
      * @param $sProfileID
      * @param $sFieldCode
+     *
      * @throws \Bitrix\Main\ArgumentException
      * @throws \Bitrix\Main\Db\SqlQueryException
      * @throws \Bitrix\Main\ObjectPropertyException
      * @throws \Bitrix\Main\SystemException
      */
-    public static function deleteOptions($sProfileID, $sFieldCode)
+    public function deleteOptions($sProfileID, $sFieldCode)
     {
         $oConnection = Application::getConnection();
 

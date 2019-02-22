@@ -4,6 +4,7 @@ namespace Ylab\Ddata\Entity;
 
 use Bitrix\Highloadblock\HighloadBlockLangTable;
 use Bitrix\Highloadblock\HighloadBlockTable;
+use Bitrix\Main\Application;
 use Bitrix\Main\DB\SqlExpression;
 use Bitrix\Main\Entity\ExpressionField;
 use Bitrix\Main\Entity\ReferenceField;
@@ -13,11 +14,13 @@ use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\UserFieldTable;
 use Ylab\Ddata\Interfaces\EntityUnitClass;
 use Ylab\Ddata\Helpers;
+use Ylab\Ddata\Orm\DataUnitGenElementsTable;
 
 Loc::loadMessages(__FILE__);
 
 /**
  * Class HighloadblockElement
+ *
  * @package Ylab\Ddata\entity
  */
 class HighloadblockElement extends EntityUnitClass
@@ -32,22 +35,26 @@ class HighloadblockElement extends EntityUnitClass
     public $oEntity = null;
 
     /**
+     * Метод возврящает описывающий массив
+     *
      * @return array
      */
-    public static function getDescription()
+    public function getDescription()
     {
         return [
-            "ID" => "highloadblock-element",
-            "NAME" => Loc::getMessage('YLAB_DDATA_HLELEM_ENTITY_NAME'),
-            "DESCRIPTION" => Loc::getMessage('YLAB_DDATA_HLELEM_ENTITY_DESCRIPTION'),
-            "TYPE" => "highloadblock-element",
-            "CLASS" => __CLASS__
+            'ID' => 'highloadblock-element',
+            'NAME' => Loc::getMessage('YLAB_DDATA_HLELEM_ENTITY_NAME'),
+            'DESCRIPTION' => Loc::getMessage('YLAB_DDATA_HLELEM_ENTITY_DESCRIPTION'),
+            'TYPE' => 'highloadblock-element',
+            'CLASS' => __CLASS__
         ];
     }
 
     /**
      * HighloadblockElement constructor.
+     *
      * @param $iProfileID
+     *
      * @throws \Bitrix\Main\ArgumentException
      * @throws \Bitrix\Main\LoaderException
      * @throws \Bitrix\Main\SystemException
@@ -73,7 +80,7 @@ class HighloadblockElement extends EntityUnitClass
     /**
      * @inheritdoc
      */
-    public static function getPrepareForm(HttpRequest $oRequest)
+    public function getPrepareForm(HttpRequest $oRequest)
     {
         Loader::includeModule("highloadblock");
 
@@ -101,7 +108,7 @@ class HighloadblockElement extends EntityUnitClass
     /**
      * @inheritdoc
      */
-    public static function isValidPrepareForm(HttpRequest $oRequest)
+    public function isValidPrepareForm(HttpRequest $oRequest)
     {
         Loader::includeModule("highloadblock");
 
@@ -264,5 +271,50 @@ class HighloadblockElement extends EntityUnitClass
 
 
         return $arResult;
+    }
+
+    /**
+     * Удаление сгенерированных данных
+     *
+     * @return mixed
+     * @throws \Bitrix\Main\ArgumentException
+     * @throws \Bitrix\Main\Db\SqlQueryException
+     * @throws \Bitrix\Main\ObjectPropertyException
+     * @throws \Bitrix\Main\SystemException
+     * @throws \Exception
+     */
+    public function deleteGenData()
+    {
+        $arGenData = $this->getGenData();
+
+        $connection = Application::getConnection();
+        $connection->startTransaction();
+
+        $rsData = HighloadBlockTable::getList([
+            'filter' => [
+                'ID' => $this->iHighloadblockId
+            ]
+        ]);
+        if (($arData = $rsData->fetch())) {
+            $oEntity = HighloadBlockTable::compileEntity($arData);
+        }
+        $oEntityDataClass = $oEntity->getDataClass();
+
+        foreach ($arGenData as $arGenDatum) {
+            $oResult = $oEntityDataClass::delete($arGenDatum['GEN_ELEMENT_ID']);
+            if (!$oResult->isSuccess()) {
+                $connection->rollbackTransaction();
+                throw new \Exception(Loc::getMessage('YLAB_DDATA_DELETE_DATA_OPTION_ERR_DELETE',
+                    ['#ELEMENT_ID#' => $arGenDatum['GEN_ELEMENT_ID']]));
+            }
+            $oResult = DataUnitGenElementsTable::delete($arGenDatum['ID']);
+            if (!$oResult->isSuccess()) {
+                $connection->rollbackTransaction();
+                throw new \Exception(Loc::getMessage('YLAB_DDATA_DELETE_DATA_OPTION_ERR_DELETE',
+                    ['#ELEMENT_ID#' => $arGenDatum['ID']]));
+            }
+        }
+
+        $connection->commitTransaction();
     }
 }

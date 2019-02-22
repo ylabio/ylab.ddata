@@ -1,4 +1,4 @@
-<?
+<?php
 $MESS['GENERATE'] = 'Что генерируем?';
 $MESS['WORDS'] = 'Слова';
 $MESS['SENTENCES'] = 'Предложения';

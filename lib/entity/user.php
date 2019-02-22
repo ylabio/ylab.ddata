@@ -2,14 +2,17 @@
 
 namespace Ylab\Ddata\Entity;
 
+use Bitrix\Main\Application;
 use Bitrix\Main\HttpRequest;
 use Bitrix\Main\Localization\Loc;
 use Ylab\Ddata\Interfaces\EntityUnitClass;
+use Ylab\Ddata\Orm\DataUnitGenElementsTable;
 
 Loc::loadMessages(__FILE__);
 
 /**
  * Class User
+ *
  * @package Ylab\Ddata\entity
  */
 class User extends EntityUnitClass
@@ -18,20 +21,22 @@ class User extends EntityUnitClass
      * @inheritdoc
      * @return array
      */
-    public static function getDescription()
+    public function getDescription()
     {
         return [
-            "ID" => "user",
-            "NAME" => Loc::getMessage('YLAB_DDATA_USER_ENTITY_NAME'),
-            "DESCRIPTION" => Loc::getMessage('YLAB_DDATA_USER_ENTITY_DESCRIPTION'),
-            "TYPE" => "user",
-            "CLASS" => __CLASS__
+            'ID' => 'user',
+            'NAME' => Loc::getMessage('YLAB_DDATA_USER_ENTITY_NAME'),
+            'DESCRIPTION' => Loc::getMessage('YLAB_DDATA_USER_ENTITY_DESCRIPTION'),
+            'TYPE' => 'user',
+            'CLASS' => __CLASS__
         ];
     }
 
     /**
      * User constructor.
+     *
      * @param $iProfileID
+     *
      * @throws \Bitrix\Main\ArgumentException
      * @throws \Bitrix\Main\SystemException
      */
@@ -42,20 +47,24 @@ class User extends EntityUnitClass
 
     /**
      * @inheritdoc
+     *
      * @param HttpRequest $request
+     *
      * @return string
      */
-    public static function getPrepareForm(HttpRequest $request)
+    public function getPrepareForm(HttpRequest $request)
     {
-        return "";
+        return '';
     }
 
     /**
      * @inheritdoc
+     *
      * @param HttpRequest $request
+     *
      * @return boolean
      */
-    public static function isValidPrepareForm(HttpRequest $request)
+    public function isValidPrepareForm(HttpRequest $request)
     {
         return true;
     }
@@ -111,7 +120,7 @@ class User extends EntityUnitClass
                     'type' => ['string', 'integer'],
                     'title' => Loc::getMessage('YLAB_DDATA_USER_FIELD_XML_ID')
                 ],
-                'GROUP' => [
+                'GROUP_ID' => [
                     'type' => ['user.group'],
                     'title' => Loc::getMessage('YLAB_DDATA_USER_GROUP')
                 ],
@@ -172,7 +181,7 @@ class User extends EntityUnitClass
                     'title' => Loc::getMessage('YLAB_DDATA_USER_FIELD_PERSONAL_STREET')
                 ],
                 'PERSONAL_MAILBOX' => [
-                    'type' => ['integer'],
+                    'type' => ['string', 'integer'],
                     'title' => Loc::getMessage('YLAB_DDATA_USER_FIELD_PERSONAL_MAILBOX')
                 ],
                 'PERSONAL_NOTES' => [
@@ -236,7 +245,7 @@ class User extends EntityUnitClass
                     'title' => Loc::getMessage('YLAB_DDATA_USER_FIELD_WORK_STREET')
                 ],
                 'WORK_MAILBOX' => [
-                    'type' => ['integer'],
+                    'type' => ['string', 'integer'],
                     'title' => Loc::getMessage('YLAB_DDATA_USER_FIELD_WORK_MAILBOX')
                 ],
                 'WORK_NOTES' => [
@@ -255,29 +264,29 @@ class User extends EntityUnitClass
             $arItem['multiple'] = ($arProperty['MULTIPLE'] == 'Y');
 
             switch ($arProperty['USER_TYPE_ID']) {
-                case "string":
-                    $arItem['type'] = ["string", "integer"];
+                case 'string':
+                    $arItem['type'] = ['string', 'integer'];
                     break;
-                case "integer":
-                    $arItem['type'] = ["integer"];
+                case 'integer':
+                    $arItem['type'] = ['integer'];
                     break;
-                case "double":
-                    $arItem['type'] = ["integer"];
+                case 'double':
+                    $arItem['type'] = ['integer'];
                     break;
-                case "datetime":
-                    $arItem['type'] = ["datetime"];
+                case 'datetime':
+                    $arItem['type'] = ['datetime'];
                     break;
-                case "date":
-                    $arItem['type'] = ["datetime"];
+                case 'date':
+                    $arItem['type'] = ['datetime'];
                     break;
-                case "file":
-                    $arItem['type'] = ["file"];
+                case 'file':
+                    $arItem['type'] = ['file'];
                     break;
-                case "iblock_section":
-                    $arItem['type'] = ["iblock.section"];
+                case 'iblock_section':
+                    $arItem['type'] = ['iblock.section'];
                     break;
-                case "iblock_element":
-                    $arItem['type'] = ["iblock.element"];
+                case 'iblock_element':
+                    $arItem['type'] = ['iblock.element'];
                     break;
                 default:
                     $arItem['type'] = [];
@@ -331,5 +340,39 @@ class User extends EntityUnitClass
         }
 
         return $arResult;
+    }
+
+    /**
+     * Удаление сгенерированных данных
+     *
+     * @return mixed
+     * @throws \Bitrix\Main\ArgumentException
+     * @throws \Bitrix\Main\Db\SqlQueryException
+     * @throws \Bitrix\Main\ObjectPropertyException
+     * @throws \Bitrix\Main\SystemException
+     * @throws \Exception
+     */
+    public function deleteGenData()
+    {
+        $arGenData = $this->getGenData();
+
+        $connection = Application::getConnection();
+        $connection->startTransaction();
+
+        foreach ($arGenData as $arGenDatum) {
+            if (!\CUser::Delete($arGenDatum['GEN_ELEMENT_ID'])) {
+                $connection->rollbackTransaction();
+                throw new \Exception(Loc::getMessage('YLAB_DDATA_DELETE_DATA_OPTION_ERR_DELETE',
+                    ['#ELEMENT_ID#' => $arGenDatum['GEN_ELEMENT_ID']]));
+            }
+            $oResult = DataUnitGenElementsTable::delete($arGenDatum['ID']);
+            if (!$oResult->isSuccess()) {
+                $connection->rollbackTransaction();
+                throw new \Exception(Loc::getMessage('YLAB_DDATA_DELETE_DATA_OPTION_ERR_DELETE',
+                    ['#ELEMENT_ID#' => $arGenDatum['ID']]));
+            }
+        }
+
+        $connection->commitTransaction();
     }
 }

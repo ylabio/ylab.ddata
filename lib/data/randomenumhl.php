@@ -1,4 +1,4 @@
-<?
+<?php
 
 namespace Ylab\Ddata\data;
 
@@ -8,33 +8,35 @@ use Bitrix\Main\Localization\Loc;
 use Ylab\Ddata\interfaces\DataUnitClass;
 use Ylab\Ddata\Helpers;
 
+Loc::loadMessages(__FILE__);
+
 /**
+ * Генерация случайного значения из доступного списка сущности ХайлоадБлока
+ *
  * Class RandomEnumHL
  * @package Ylab\Ddata\data
  */
 class RandomEnumHL extends DataUnitClass
 {
-    /**
-     * @var bool
-     */
-    private static $bCheckStaticMethod = true;
     protected $sRandom = 'N';
+
+    /** @var int $iSelectedValue ID выбранного значения списка */
     protected $iSelectedValue = 0;
+
+    /** @var array $arAllValues Список значений списка */
     protected $arAllValues = [];
 
     /**
      * RandomEnumHL constructor.
-     * @param $sProfileID
-     * @param $sFieldCode
-     * @param $sGeneratorID
+     * @param $sProfileID - ID профиля
+     * @param $sFieldCode - Симфольный код свойства
+     * @param $sGeneratorID - ID уже сохраненного генератора
      * @throws \Bitrix\Main\ArgumentException
      * @throws \Bitrix\Main\ObjectPropertyException
      * @throws \Bitrix\Main\SystemException
      */
-    public function __construct($sProfileID, $sFieldCode, $sGeneratorID)
+    public function __construct(string $sProfileID = '', string $sFieldCode = '', string $sGeneratorID = '')
     {
-        self::$bCheckStaticMethod = false;
-
         parent::__construct($sProfileID, $sFieldCode, $sGeneratorID);
 
         if (!empty($this->options['random'])) {
@@ -57,14 +59,14 @@ class RandomEnumHL extends DataUnitClass
      *
      * @return array
      */
-    public static function getDescription()
+    public function getDescription()
     {
         return [
-            "ID" => "enum.hl.unit",
-            "NAME" => Loc::getMessage("YLAB_DDATA_DATA_UNIT_ENUM_HL_NAME"),
-            "DESCRIPTION" => Loc::getMessage('YLAB_DDATA_DATA_UNIT_ENUM_HL_DESCRIPTION'),
-            "TYPE" => "enum.hl",
-            "CLASS" => __CLASS__
+            'ID' => 'enum.hl.unit',
+            'NAME' => Loc::getMessage('YLAB_DDATA_DATA_UNIT_ENUM_HL_NAME'),
+            'DESCRIPTION' => Loc::getMessage('YLAB_DDATA_DATA_UNIT_ENUM_HL_DESCRIPTION'),
+            'TYPE' => 'enum.hl',
+            'CLASS' => __CLASS__
         ];
     }
 
@@ -72,25 +74,17 @@ class RandomEnumHL extends DataUnitClass
      * Метод возвращает html строку формы с настройкой генератора если таковые необходимы
      *
      * @param HttpRequest $request
-     * @return mixed|string
-     * @throws \Bitrix\Main\ArgumentException
+     * @return false|mixed|string
      * @throws \Bitrix\Main\LoaderException
-     * @throws \Bitrix\Main\ObjectPropertyException
-     * @throws \Bitrix\Main\SystemException
      */
-    public static function getOptionForm(HttpRequest $request)
+    public function getOptionForm(HttpRequest $request)
     {
         Loader::includeModule('highloadblock');
 
-        $arRequest = $request->toArray();
-        $arOptions = (array)$arRequest['option'];
         $sGeneratorID = $request->get('generator');
-        $sFieldID = $request->get('field');
         $sProfileID = $request->get('profile_id');
         $sPropertyName = $request->get('property-name');
         $sPropertyCode = $request->get('property-code');
-
-        $arOptions = array_merge(self::getOptions($sGeneratorID, $sProfileID, $sFieldID), $arOptions);
 
         $oEnum = new \CUserFieldEnum;
         $rsEnum = $oEnum->GetList([], ['USER_FIELD_NAME' => $sPropertyCode]);
@@ -112,7 +106,7 @@ class RandomEnumHL extends DataUnitClass
      * @param HttpRequest $request
      * @return mixed
      */
-    public static function isValidateOptions(HttpRequest $request)
+    public  function isValidateOptions(HttpRequest $request)
     {
         $arPrepareRequest = $request->get('option');
 
@@ -134,17 +128,13 @@ class RandomEnumHL extends DataUnitClass
      */
     public function getValue()
     {
-        if (!self::$bCheckStaticMethod) {
-            $arAllValues = $this->arAllValues;
-            if ($this->sRandom == 'Y') {
-                $iResult = array_rand($arAllValues);
+        $arAllValues = $this->arAllValues;
+        if ($this->sRandom == 'Y') {
+            $iResult = array_rand($arAllValues);
 
-                return $arAllValues[$iResult];
-            } else {
-                return $arAllValues[$this->iSelectedValue];
-            }
+            return $arAllValues[$iResult];
         } else {
-            throw new \Exception(Loc::getMessage('YLAB_DDATA_DATA_UNIT_ENUM_HL_EXCEPTION_STATIC'));
+            return $arAllValues[$this->iSelectedValue];
         }
     }
 }

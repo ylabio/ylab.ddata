@@ -1,4 +1,5 @@
-<?
+<?php
+
 namespace Ylab\Ddata\Orm;
 
 use Bitrix\Main\Entity;
@@ -32,7 +33,7 @@ class DataUnitGenElementsTable extends Entity\DataManager
             ]),
             new Entity\StringField('PROFILE_TYPE', [
                 'required' => true,
-                'validation' => function() {
+                'validation' => function () {
                     return [
                         new Entity\Validator\Length(1, 255)
                     ];
@@ -40,7 +41,7 @@ class DataUnitGenElementsTable extends Entity\DataManager
             ]),
             new Entity\IntegerField('GEN_ELEMENT_ID', [
                 'required' => true,
-                'validation' => function() {
+                'validation' => function () {
                     return [
                         new Entity\Validator\Length(1, 255)
                     ];

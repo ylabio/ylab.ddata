@@ -1,4 +1,4 @@
-<?
+<?php
 if (!empty($iWidth) && !empty($iHeight)) {
 
     $arConfig = [
@@ -47,4 +47,3 @@ if (!empty($iWidth) && !empty($iHeight)) {
     imagepng($sImage);
     imagedestroy($sImage);
 }
-?>

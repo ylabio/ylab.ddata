@@ -1,76 +1,23 @@
 <?php
 /**
- * @global $arRequest
- * @global $arOptions
+ * @global $sGeneratorID
+ * @global $sProfileID
  * @global $sPropertyCode
+ * @global $sPropertyName
+ * @global $this
  */
 
 use Bitrix\Main\Localization\Loc;
-use Ylab\Ddata\LoadUnits;
 
 Loc::loadMessages(__FILE__);
 
-$oRequest = \Bitrix\Main\Application::getInstance()->getContext()->getRequest();
-$sEntityID = $oRequest->get('generator');
-$oClasses = new LoadUnits();
-$arClassesData = $oClasses->getDataUnits();
 
-$arEntity = [];
-foreach ($arClassesData as $arClass) {
-    if ($arClass['ID'] == $sEntityID) {
-        $arData = $arClass;
-    }
-}
 
-$oData = new $arData['CLASS']($sProfileID, $sPropertyCode, $sGeneratorID);
-$iDateFrom = $oData->iDateFrom;
-$iDateTo = $oData->iDateTo;
-$sDateFormat = $oData->sDateFormat;
+$iDateFrom = $this->iDateFrom;
+$iDateTo = $this->iDateTo;
+$sDateFormat = $this->sDateFormat;
 Loc::loadMessages(__FILE__);
 ?>
-<script type='text/javascript'>
-    BX.ready(function () {
-        var inputOptions = BX.findChild(
-            BX(document),
-            {
-                attribute: {
-                    'name': '<?= $sPropertyName ?>[<?= $sGeneratorID ?>]'
-                }
-            },
-            true,
-            true
-        )[0];
-        console.log(inputOptions);
-        if (inputOptions) {
-            var optionsValue = JSON.parse(inputOptions.value);
-        }
-        if (inputOptions != undefined) {
-            Object.keys(optionsValue).forEach(function (key, item) {
-                var optionsForm = BX.findChild(
-                    BX('WindowEntityDataForm'),
-                    {
-                        attribute: {
-                            'name': 'option[' + key + ']'
-                        }
-                    },
-                    true,
-                    true
-                );
-                if (optionsForm.length > 0) {
-                    if (key == 'date_format') {
-                        optionsForm.forEach(function (key1, item1) {
-                            if (key1.value == optionsValue[key]) {
-                                key1.checked = true;
-                            }
-                        });
-                    } else {
-                        optionsForm[0].value = optionsValue[key];
-                    }
-                }
-            });
-        }
-    });
-</script>
 <table class="adm-detail-content-table edit-table">
     <tbody>
     <tr>
@@ -111,4 +58,3 @@ Loc::loadMessages(__FILE__);
     </tr>
     </tbody>
 </table>
-
