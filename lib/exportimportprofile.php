@@ -77,6 +77,7 @@ class ExportImportProfile
 
     /**
      * @return string
+     * @throws \Bitrix\Main\SystemException
      */
     public static function pathDirExport()
     {
@@ -85,6 +86,7 @@ class ExportImportProfile
 
     /**
      * @return bool
+     * @throws \Bitrix\Main\SystemException
      */
     protected static function newDir()
     {
@@ -92,9 +94,9 @@ class ExportImportProfile
 
         if (!file_exists($sPathDir)) {
             return mkdir($sPathDir, 0700);
-        } else {
-            return false;
         }
+
+        return false;
     }
 
     /**
@@ -103,7 +105,7 @@ class ExportImportProfile
      */
     public static function translit($str)
     {
-        $arParams = array("replace_space" => "-", "replace_other" => "-");
+        $arParams = array('replace_space' => '-', 'replace_other' => '-');
         $str = \Cutil::translit($str, "ru", $arParams);
         return $str;
     }
@@ -132,6 +134,9 @@ class ExportImportProfile
     /**
      * @param $iIdProfile
      * @return string
+     * @throws \Bitrix\Main\ArgumentException
+     * @throws \Bitrix\Main\ObjectPropertyException
+     * @throws \Bitrix\Main\SystemException
      */
     public static function getPathFile($iIdProfile)
     {

@@ -3,32 +3,20 @@
  * @global $arRequest
  * @global $arOptions
  * @global $sPropertyCode
+ * @global $this
  */
 
 use Bitrix\Main\Localization\Loc;
-use Ylab\Ddata\LoadUnits;
 
 Loc::loadMessages(__FILE__);
 
-$oRequest = \Bitrix\Main\Application::getInstance()->getContext()->getRequest();
-$sEntityID = $oRequest->get('generator');
-$oClasses = new LoadUnits();
-$arClassesData = $oClasses->getDataUnits();
-
-$arEntity = [];
-foreach ($arClassesData as $arClass) {
-    if ($arClass['ID'] == $sEntityID) {
-        $arData = $arClass;
-    }
-}
-
-$oData = new $arData['CLASS']($sProfileID, $sPropertyCode, $sGeneratorID);
-$sGenerate = $oData->sGenerate;
-$iCount = $oData->iCount;
-$sHtmlWrap = $oData->sHtmlWrap;
+$sGenerate = $this->sGenerate;
+$iCount = $this->iCount;
+$sHtmlWrap = $this->sHtmlWrap;
 ?>
 <script type='text/javascript'>
-    RegExp.escape = function(text) {
+    BX.Ylab.Settings = function(){};
+    RegExp.escape = function (text) {
         if (!arguments.callee.sRE) {
             var specials = [
                 '\\', '"'
@@ -39,6 +27,11 @@ $sHtmlWrap = $oData->sHtmlWrap;
         }
         return text.replace(arguments.callee.sRE, '\\$1');
     };
+
+    BX.bind(BX('lorem-ipsum-wrap'), 'bxchange', function () {
+        BX('lorem-ipsum-wrap-hidden').value = RegExp.escape(this.value).replace(/\n/gmi, "\\n");
+    });
+
     BX.ready(function () {
         var inputOptions = BX.findChild(
             BX(document),
@@ -50,6 +43,7 @@ $sHtmlWrap = $oData->sHtmlWrap;
             true,
             true
         )[0];
+
         if (inputOptions) {
             var optionsValue = JSON.parse(inputOptions.value);
         }
@@ -66,19 +60,15 @@ $sHtmlWrap = $oData->sHtmlWrap;
                     true
                 )[0];
                 if (optionsForm) {
-                    if(key == 'wrap') {
+                    if (key == 'wrap') {
                         BX('lorem-ipsum-wrap').value = optionsValue[key];
-                        optionsForm.value = RegExp.escape(optionsValue[key]);
+                        optionsForm.value = RegExp.escape(optionsValue[key]).replace(/\n/gmi, "\\n");
                     } else {
                         optionsForm.value = optionsValue[key];
                     }
                 }
             });
         }
-
-        BX.bind(BX('lorem-ipsum-wrap'), 'keyup',function(){
-            BX('lorem-ipsum-wrap-hidden').value = RegExp.escape(this.value);
-        });
     });
 </script>
 <table class="adm-detail-content-table edit-table">
@@ -108,11 +98,10 @@ $sHtmlWrap = $oData->sHtmlWrap;
             <?= Loc::getMessage('WRAP') ?>
         </td>
         <td width="60%" class="adm-detail-content-cell-r">
-            <p><?=Loc::getMessage('HINT')?></p>
+            <p><?= Loc::getMessage('HINT') ?></p>
             <textarea id="lorem-ipsum-wrap" cols="30" rows="5"></textarea>
             <input type="hidden" name="option[wrap]" id="lorem-ipsum-wrap-hidden" value="">
         </td>
     </tr>
     </tbody>
 </table>
-

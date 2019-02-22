@@ -1,0 +1,37 @@
+{
+  "name": "ylab/ddata",
+  "description": "The ylab.ddata module implements the generation of Bitrix entities filled with random data. The module will help with debugging. The public part of the site, API and in other situations when entities are needed (IB, HL, Users) filled with test data.",
+  "type": "bitrix-d7-module",
+  "require": {
+    "php": ">=7.0",
+    "composer/installers": "~1.0"
+  },
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Roman Shvykov",
+      "email": "roman_shvykov@mail.ru",
+      "role": "Developer"
+    },
+    {
+      "name": "Anton Kuleshov",
+      "email": "akbsit@yandex.ru",
+      "role": "Developer"
+    },
+    {
+      "name": "Vladimir Admaev",
+      "email": "v.admaev2@yandex.ru",
+      "role": "Developer"
+    },
+    {
+      "name": "Lev Dmitriev",
+      "email": "Lev.Dmitrievv@yandex.ru",
+      "role": "Developer"
+    },
+    {
+      "name": "Alexandr Zemlanoy",
+      "email": "aleks-the-best@mail.ru",
+      "role": "Developer"
+    }
+  ]
+}

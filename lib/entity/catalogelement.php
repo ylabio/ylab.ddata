@@ -2,6 +2,7 @@
 
 namespace Ylab\Ddata\Entity;
 
+use Bitrix\Main\Application;
 use Bitrix\Catalog\ProductTable;
 use Bitrix\Main\HttpRequest;
 use Bitrix\Main\Loader;
@@ -10,11 +11,13 @@ use CCatalogGroup;
 use CCatalogSku;
 use Ylab\Ddata\Interfaces\EntityUnitClass;
 use Ylab\Ddata\Helpers;
+use Ylab\Ddata\Orm\DataUnitGenElementsTable;
 
 Loc::loadMessages(__FILE__);
 
 /**
  * Class CatalogElement
+ *
  * @package Ylab\Ddata\Entity
  */
 class CatalogElement extends EntityUnitClass
@@ -49,20 +52,22 @@ class CatalogElement extends EntityUnitClass
      *
      * @return array
      */
-    public static function getDescription()
+    public function getDescription()
     {
         return [
-            "ID" => "catalog-element",
-            "NAME" => Loc::getMessage('YLAB_DDATA_CAT_ELEM_ENTITY_NAME'),
-            "DESCRIPTION" => Loc::getMessage('YLAB_DDATA_CAT_ELEM_ENTITY_DESCRIPTION'),
-            "TYPE" => "catalog",
-            "CLASS" => __CLASS__
+            'ID' => 'catalog-element',
+            'NAME' => Loc::getMessage('YLAB_DDATA_CAT_ELEM_ENTITY_NAME'),
+            'DESCRIPTION' => Loc::getMessage('YLAB_DDATA_CAT_ELEM_ENTITY_DESCRIPTION'),
+            'TYPE' => "catalog",
+            'CLASS' => __CLASS__
         ];
     }
 
     /**
      * CatalogElement constructor.
+     *
      * @param $iProfileID
+     *
      * @throws \Bitrix\Main\ArgumentException
      * @throws \Bitrix\Main\SystemException
      * @throws \Bitrix\Main\LoaderException
@@ -72,6 +77,7 @@ class CatalogElement extends EntityUnitClass
         parent::__construct($iProfileID);
 
         Loader::includeModule('catalog');
+        Loader::includeModule('iblock');
 
         if (!empty($this->profile['OPTIONS']['iblock_id'])) {
             $this->iCatalogIBlockID = $this->profile['OPTIONS']['iblock_id'];
@@ -95,7 +101,7 @@ class CatalogElement extends EntityUnitClass
 
         if (!empty($this->profile['FIELDS'])) {
             $arTmp = [];
-            $arFields = self::getFields();
+            $arFields = $this->getFields();
 
             foreach ($this->profile['FIELDS'] as $arField) {
                 if (isset($arFields['FIELDS'][$arField['FIELD_CODE']])) {
@@ -115,10 +121,11 @@ class CatalogElement extends EntityUnitClass
      * Метод фозвращает html строку с полями предварительной настройки сущности
      *
      * @param HttpRequest $oRequest
+     *
      * @return string
      * @throws \Bitrix\Main\LoaderException
      */
-    public static function getPrepareForm(HttpRequest $oRequest)
+    public function getPrepareForm(HttpRequest $oRequest)
     {
         Loader::includeModule('iblock');
         Loader::includeModule('catalog');
@@ -148,10 +155,11 @@ class CatalogElement extends EntityUnitClass
      * Метод проверяет на валидность данные  предварительной настройки сущности
      *
      * @param HttpRequest $oRequest
+     *
      * @return boolean
      * @throws \Bitrix\Main\LoaderException
      */
-    public static function isValidPrepareForm(HttpRequest $oRequest)
+    public function isValidPrepareForm(HttpRequest $oRequest)
     {
         $arPrepareRequest = $oRequest->get('prepare');
         $flag = false;
@@ -173,7 +181,7 @@ class CatalogElement extends EntityUnitClass
 
             $flag = true;
             if ($arPrepareRequest['catalog_type'] == ProductTable::TYPE_SKU) {
-                if (intval($arPrepareRequest['min_offers']) > 0 && intval($arPrepareRequest['max_offers']) > 0 && (intval($arPrepareRequest['max_offers']) > intval($arPrepareRequest['min_offers']))) {
+                if (intval($arPrepareRequest['min_offers']) > 0 && intval($arPrepareRequest['max_offers']) > 0 && (intval($arPrepareRequest['max_offers']) >= intval($arPrepareRequest['min_offers']))) {
                     $flag = true;
                 } else {
                     return false;
@@ -190,6 +198,7 @@ class CatalogElement extends EntityUnitClass
      * Метод возвращает массив полей и свойств сущности
      *
      * @param HttpRequest $oRequest
+     *
      * @return array
      * @throws \Bitrix\Main\LoaderException
      */
@@ -306,9 +315,9 @@ class CatalogElement extends EntityUnitClass
         ];
 
         $arFields['GROUPS_NAME'] = [
-            'property' => Loc::getMessage("YLAB_DDATA_GROUP_IBLOCK_PROPERTIES"),
-            'catalog-property' => Loc::getMessage("YLAB_DDATA_GROUP_CATALOG_PROPERTIES"),
-            'catalog-property-offer' => Loc::getMessage("YLAB_DDATA_GROUP_OFFERS_PROPERTIES")
+            'property' => Loc::getMessage('YLAB_DDATA_GROUP_IBLOCK_PROPERTIES'),
+            'catalog-property' => Loc::getMessage('YLAB_DDATA_GROUP_CATALOG_PROPERTIES'),
+            'catalog-property-offer' => Loc::getMessage('YLAB_DDATA_GROUP_OFFERS_PROPERTIES')
         ];
 
         foreach ($arFields['FIELDS'] as $sCode => &$sField) {
@@ -532,6 +541,7 @@ class CatalogElement extends EntityUnitClass
 
     /**
      * Метод для получения типов Цены
+     *
      * @return array
      * @throws \Bitrix\Main\LoaderException
      */
@@ -554,61 +564,62 @@ class CatalogElement extends EntityUnitClass
 
     /**
      * Метод для получения основных свойств Торгового каталога
+     *
      * @return array
      */
     public function getBaseCatalogProperties()
     {
         $arResult = [];
         $arResult['YLAB_DDATA_CATALOG_VAT_INCLUDED'] = [
-            'title' => Loc::getMessage("YLAB_DDATA_CATALOG_VAT_INCLUDED_TITLE"),
+            'title' => Loc::getMessage('YLAB_DDATA_CATALOG_VAT_INCLUDED_TITLE'),
             'required' => false,
             'group-id' => 'catalog-property',
             'type' => ['checkbox']
         ];
         $arResult['YLAB_DDATA_CATALOG_QUANTITY_TRACE'] = [
-            'title' => Loc::getMessage("YLAB_DDATA_CATALOG_QUANTITY_TRACE_TITLE"),
+            'title' => Loc::getMessage('YLAB_DDATA_CATALOG_QUANTITY_TRACE_TITLE'),
             'required' => false,
             'group-id' => 'catalog-property',
             'type' => ['checkbox']
         ];
         $arResult['YLAB_DDATA_CATALOG_QUANTITY'] = [
-            'title' => Loc::getMessage("YLAB_DDATA_CATALOG_QUANTITY_TITLE"),
+            'title' => Loc::getMessage('YLAB_DDATA_CATALOG_QUANTITY_TITLE'),
             'required' => false,
             'group-id' => 'catalog-property',
             'type' => ['integer']
         ];
         $arResult['YLAB_DDATA_CATALOG_CAN_BUY_ZERO'] = [
-            'title' => Loc::getMessage("YLAB_DDATA_CATALOG_CAN_BUY_ZERO_TITLE"),
+            'title' => Loc::getMessage('YLAB_DDATA_CATALOG_CAN_BUY_ZERO_TITLE'),
             'required' => false,
             'group-id' => 'catalog-property',
             'type' => ['checkbox']
         ];
         $arResult['YLAB_DDATA_CATALOG_SUBSCRIBE'] = [
-            'title' => Loc::getMessage("YLAB_DDATA_CATALOG_SUBSCRIBE_TITLE"),
+            'title' => Loc::getMessage('YLAB_DDATA_CATALOG_SUBSCRIBE_TITLE'),
             'required' => false,
             'group-id' => 'catalog-property',
             'type' => ['checkbox']
         ];
         $arResult['YLAB_DDATA_CATALOG_WEIGHT'] = [
-            'title' => Loc::getMessage("YLAB_DDATA_CATALOG_WEIGHT_TITLE"),
+            'title' => Loc::getMessage('YLAB_DDATA_CATALOG_WEIGHT_TITLE'),
             'required' => false,
             'group-id' => 'catalog-property',
             'type' => ['integer']
         ];
         $arResult['YLAB_DDATA_CATALOG_LENGTH'] = [
-            'title' => Loc::getMessage("YLAB_DDATA_CATALOG_LENGTH_TITLE"),
+            'title' => Loc::getMessage('YLAB_DDATA_CATALOG_LENGTH_TITLE'),
             'required' => false,
             'group-id' => 'catalog-property',
             'type' => ['integer']
         ];
         $arResult['YLAB_DDATA_CATALOG_WIDTH'] = [
-            'title' => Loc::getMessage("YLAB_DDATA_CATALOG_WIDTH_TITLE"),
+            'title' => Loc::getMessage('YLAB_DDATA_CATALOG_WIDTH_TITLE'),
             'required' => false,
             'group-id' => 'catalog-property',
             'type' => ['integer']
         ];
         $arResult['YLAB_DDATA_CATALOG_HEIGHT'] = [
-            'title' => Loc::getMessage("YLAB_DDATA_CATALOG_HEIGHT_TITLE"),
+            'title' => Loc::getMessage('YLAB_DDATA_CATALOG_HEIGHT_TITLE'),
             'required' => false,
             'group-id' => 'catalog-property',
             'type' => ['integer']
@@ -632,13 +643,13 @@ class CatalogElement extends EntityUnitClass
         }
 
         $arResult['YLAB_DDATA_CATALOG_PURCHASING_PRICE'] = [
-            'title' => Loc::getMessage("YLAB_DDATA_CATALOG_PURCHASING_PRICE_TITLE"),
+            'title' => Loc::getMessage('YLAB_DDATA_CATALOG_PURCHASING_PRICE_TITLE'),
             'required' => false,
             'group-id' => 'catalog-property',
             'type' => ['integer']
         ];
         $arResult['YLAB_DDATA_CATALOG_PURCHASING_CURRENCY'] = [
-            'title' => Loc::getMessage("YLAB_DDATA_CATALOG_PURCHASING_CURRENCY_TITLE"),
+            'title' => Loc::getMessage('YLAB_DDATA_CATALOG_PURCHASING_CURRENCY_TITLE'),
             'required' => false,
             'group-id' => 'catalog-property',
             'type' => ['currency']
@@ -649,7 +660,9 @@ class CatalogElement extends EntityUnitClass
 
     /**
      * Метод для получения подходящего генератора для свойства
+     *
      * @param $arProperty
+     *
      * @return array
      */
     public function getGenType($arProperty)
@@ -658,22 +671,22 @@ class CatalogElement extends EntityUnitClass
         if ($arProperty['USER_TYPE']) {
             switch ($arProperty['USER_TYPE']) {
                 case 'UserID':
-                    $arResult = ["user"];
+                    $arResult = ['user'];
                     break;
                 case 'DateTime':
-                    $arResult = ["datetime"];
+                    $arResult = ['datetime'];
                     break;
                 case 'Date':
-                    $arResult = ["datetime"];
+                    $arResult = ['datetime'];
                     break;
                 case 'SectionAuto':
-                    $arResult = ["iblock.section"];
+                    $arResult = ['iblock.section'];
                     break;
                 case 'HTML':
-                    $arResult = ["string"];
+                    $arResult = ['string'];
                     break;
                 case 'directory':
-                    $arResult = ["dictionary"];
+                    $arResult = ['dictionary'];
                     break;
                 default:
                     $arResult = [];
@@ -682,22 +695,22 @@ class CatalogElement extends EntityUnitClass
         } else {
             switch ($arProperty['PROPERTY_TYPE']) {
                 case 'S':
-                    $arResult = ["string", "integer"];
+                    $arResult = ['string', 'integer'];
                     break;
                 case 'N':
-                    $arResult = ["integer"];
+                    $arResult = ['integer'];
                     break;
                 case 'F':
-                    $arResult = ["file"];
+                    $arResult = ['file'];
                     break;
                 case 'E':
-                    $arResult = ["iblock.element"];
+                    $arResult = ['iblock.element'];
                     break;
                 case 'G':
-                    $arResult = ["iblock.section"];
+                    $arResult = ['iblock.section'];
                     break;
                 case 'L':
-                    $arResult = ["iblock.list"];
+                    $arResult = ['iblock.list'];
                     break;
                 default:
                     $arResult = [];
@@ -706,5 +719,49 @@ class CatalogElement extends EntityUnitClass
         }
 
         return $arResult;
+    }
+
+    /**
+     * Удаление сгенерированных данных
+     *
+     * @return mixed
+     * @throws \Bitrix\Main\ArgumentException
+     * @throws \Bitrix\Main\Db\SqlQueryException
+     * @throws \Bitrix\Main\ObjectPropertyException
+     * @throws \Bitrix\Main\SystemException
+     * @throws \Exception
+     */
+    public function deleteGenData()
+    {
+        $arGenData = $this->getGenData();
+
+        $connection = Application::getConnection();
+        $connection->startTransaction();
+
+        foreach ($arGenData as $arGenDatum) {
+            if (!\CPrice::DeleteByProduct($arGenDatum['GEN_ELEMENT_ID'])) {
+                $connection->rollbackTransaction();
+                throw new \Exception(Loc::getMessage('YLAB_DDATA_DELETE_DATA_OPTION_ERR_DELETE',
+                    ['#ELEMENT_ID#' => $arGenDatum['GEN_ELEMENT_ID']]));
+            }
+            if (!\Bitrix\Catalog\Model\Product::delete($arGenDatum['GEN_ELEMENT_ID'])) {
+                $connection->rollbackTransaction();
+                throw new \Exception(Loc::getMessage('YLAB_DDATA_DELETE_DATA_OPTION_ERR_DELETE',
+                    ['#ELEMENT_ID#' => $arGenDatum['GEN_ELEMENT_ID']]));
+            }
+            if (!\CIBlockElement::Delete($arGenDatum['GEN_ELEMENT_ID'])) {
+                $connection->rollbackTransaction();
+                throw new \Exception(Loc::getMessage('YLAB_DDATA_DELETE_DATA_OPTION_ERR_DELETE',
+                    ['#ELEMENT_ID#' => $arGenDatum['GEN_ELEMENT_ID']]));
+            }
+            $oResult = DataUnitGenElementsTable::delete($arGenDatum['ID']);
+            if (!$oResult->isSuccess()) {
+                $connection->rollbackTransaction();
+                throw new \Exception(Loc::getMessage('YLAB_DDATA_DELETE_DATA_OPTION_ERR_DELETE',
+                    ['#ELEMENT_ID#' => $arGenDatum['ID']]));
+            }
+        }
+
+        $connection->commitTransaction();
     }
 }

@@ -12,7 +12,8 @@ class Helpers
      * @param bool $notDocumentRoot
      * @return mixed
      */
-    public static function getModulePath($notDocumentRoot = false) {
+    public static function getModulePath($notDocumentRoot = false)
+    {
         $oModule = \CModule::CreateModuleObject('ylab.ddata');
 
         return $oModule->GetPath($notDocumentRoot);
@@ -27,8 +28,8 @@ class Helpers
     {
         if (is_uploaded_file($sFile)) {
             $arResult = [];
-            $handle = fopen($sFile, "r");
-            while (($arData = fgetcsv($handle, 1000, ";")) !== false) {
+            $handle = fopen($sFile, 'r');
+            while (($arData = fgetcsv($handle, 1000, ';')) !== false) {
                 $arResult[] = $arData;
             }
             fclose($handle);
@@ -47,7 +48,8 @@ class Helpers
     {
         if (file_exists($sFilePath)) {
             $arResult = [];
-            $handle = fopen($sFilePath, "r");
+            $handle = fopen($sFilePath, 'r
+            ');
             while (($arData = fgets($handle, 4096)) !== false) {
                 $arResult[] = $arData;
             }

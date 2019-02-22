@@ -1,4 +1,4 @@
-<?
+<?php
 
 use Bitrix\Main\Localization\Loc;
 
@@ -6,8 +6,8 @@ Loc::loadMessages(__FILE__);
 
 if (!empty($arPrepareRequest['namespace']) && !class_exists($arPrepareRequest['namespace'])) {
     CAdminMessage::ShowMessage([
-        "MESSAGE" => Loc::getMessage("YLAB_DDATA_ORM_NAMESPACE_ERROR"),
-        "TYPE" => "ERROR",
+        'MESSAGE' => Loc::getMessage("YLAB_DDATA_ORM_NAMESPACE_ERROR"),
+        'TYPE' => 'ERROR',
     ]);
 }
 

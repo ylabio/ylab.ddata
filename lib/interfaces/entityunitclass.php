@@ -3,7 +3,9 @@
 namespace Ylab\Ddata\Interfaces;
 
 use Bitrix\Main\Application;
+use Bitrix\Main\HttpRequest;
 use Bitrix\Main\Web\Json;
+use Ylab\Ddata\Orm\DataUnitGenElementsTable;
 use Ylab\Ddata\Orm\DataUnitOptionsTable;
 use Ylab\Ddata\Orm\EntityUnitProfileTable;
 use Ylab\Ddata\LoadUnits;
@@ -13,21 +15,34 @@ Loc::loadMessages(__FILE__);
 
 /**
  * Class EntityUnitClass
+ *
  * @package Ylab\Ddata\Interfaces
  */
-abstract class EntityUnitClass implements GenEntityUnit
+abstract class EntityUnitClass
 {
+    /**
+     * @var array Запись профиля с параметрами
+     */
     public $profile;
 
     /**
+     * Метод возвращает описывающий массив
+     *
+     * @return array
+     */
+    public abstract function getDescription();
+
+    /**
      * EntityUnitClass constructor.
+     *
      * @param bool $iProfileID
+     *
      * @throws \Bitrix\Main\ArgumentException
      * @throws \Bitrix\Main\SystemException
      */
     public function __construct($iProfileID = false)
     {
-        $profile = self::getProfile($iProfileID);
+        $profile = $this->getProfile($iProfileID);
         if (!empty($profile['OPTIONS'])) {
             $profile['OPTIONS'] = Json::decode($profile['OPTIONS']);
         }
@@ -35,13 +50,52 @@ abstract class EntityUnitClass implements GenEntityUnit
     }
 
     /**
-     * @param array $arProfile
-     * @param array $arFields
-     * @param array $arCounts
-     * @return int
+     * Метод возвращает html строку с полями предварительной настройки сущности
+     *
+     * @param HttpRequest $oRequest
+     *
+     * @return string
+     */
+    public abstract function getPrepareForm(HttpRequest $oRequest);
+
+    /**
+     * Метод проверяет на валидность данные  предварительной настройки сущности
+     *
+     * @param HttpRequest $oRequest
+     *
+     * @return boolean
+     */
+    public abstract function isValidPrepareForm(HttpRequest $oRequest);
+
+    /**
+     * Записывает в базу 1 экземляр сгенерированной сущности
+     *
+     * @return mixed
+     */
+    public abstract function genUnit();
+
+    /**
+     * Метод возвращает массив полей и свойств сущности
+     *
+     * @param HttpRequest $oRequest
+     *
+     * @return array
+     */
+    public abstract function getFields(HttpRequest $oRequest);
+
+    /**
+     * Метод сохраняет профиль и его настройки полей
+     *
+     * @param array $arProfile - Содержит массив полей таблицы профиля см. EntityUnitProfile
+     * @param array $arFields  - Содержит массив полей профиля в виде $arFields["Код поля"]["Id генератора"] => "Json
+     *                         строка опций генератора"
+     * @param array $arCounts  - Содержит массив полей кол-ва значений для множественных свойств вида $arCount["Код
+     *                         свойства"] => "Кол-во"
+     *
+     * @return mixed
      * @throws \Bitrix\Main\Db\SqlQueryException
      */
-    public static function setProfile(array $arProfile, array $arFields, array $arCounts)
+    public function setProfile(array $arProfile, array $arFields, array $arCounts)
     {
         $connection = Application::getConnection();
 
@@ -94,13 +148,21 @@ abstract class EntityUnitClass implements GenEntityUnit
     }
 
     /**
+     * Метод возвращает профиль и его настройки полей
+     *
      * @param $iProfileID
-     * @return mixed|array
+     *
+     * @return mixed
      * @throws \Bitrix\Main\ArgumentException
+     * @throws \Bitrix\Main\ObjectPropertyException
      * @throws \Bitrix\Main\SystemException
      */
-    public static function getProfile($iProfileID)
+    public function getProfile($iProfileID)
     {
+        if (empty($iProfileID) && !empty($this->profile['ID'])) {
+            $iProfileID = $this->profile['ID'];
+        }
+
         if ($iProfileID > 0) {
             $objLoader = new LoadUnits();
             $arDataClasses = $objLoader->getDataUnits();
@@ -128,4 +190,81 @@ abstract class EntityUnitClass implements GenEntityUnit
 
         return false;
     }
+
+    /**
+     * Получение лога сгенерированных елементов для профиля
+     *
+     * @param $iProfileID
+     *
+     * @return mixed
+     * @throws \Bitrix\Main\ArgumentException
+     * @throws \Bitrix\Main\ObjectPropertyException
+     * @throws \Bitrix\Main\SystemException
+     */
+    public function getGenData($iProfileID = false)
+    {
+        if (empty($iProfileID) && !empty($this->profile['ID'])) {
+            $iProfileID = $this->profile['ID'];
+        }
+
+        if ($iProfileID > 0) {
+            $arGenData = DataUnitGenElementsTable::getList([
+                'filter' => ['=PROFILE_ID' => $iProfileID]
+            ])->fetchAll();
+            if (!empty($arGenData)) {
+
+                return $arGenData;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Запись лого сгенерированных елементов для профиля
+     *
+     * @param $iGenElementID
+     *
+     * @return mixed
+     * @throws \Bitrix\Main\Db\SqlQueryException
+     * @throws \Exception
+     */
+    public function setGenData($iGenElementID)
+    {
+        $iProfileID = $this->profile['ID'];
+        $sProfileType = $this->profile['TYPE'];
+        if ($iProfileID <= 0) {
+            return false;
+        }
+
+        $connection = Application::getConnection();
+        $connection->startTransaction();
+        $bResult = DataUnitGenElementsTable::add([
+            'PROFILE_ID' => $iProfileID,
+            'PROFILE_TYPE' => $sProfileType,
+            'GEN_ELEMENT_ID' => $iGenElementID
+        ]);
+
+        if (!$bResult->isSuccess()) {
+            $connection->rollbackTransaction();
+            throw new \Exception(Loc::getMessage('YLAB_DDATA_DELETE_DATA_OPTION_ERR_ADD',
+                    ['#PROFILE_ID#' => $iProfileID]) . implode(",<br>", $bResult->getErrorMessages()));
+        }
+
+        $connection->commitTransaction();
+
+        return $bResult->getId();
+    }
+
+
+    /**
+     * Удаление сгенерированных данных
+     *
+     * @return mixed
+     * @throws \Bitrix\Main\ArgumentException
+     * @throws \Bitrix\Main\Db\SqlQueryException
+     * @throws \Bitrix\Main\ObjectPropertyException
+     * @throws \Bitrix\Main\SystemException
+     */
+    public abstract function deleteGenData();
 }

@@ -11,40 +11,45 @@ use Ylab\Ddata\Helpers;
 Loc::loadLanguageFile(__FILE__);
 
 /**
+ * Генерация случайного элемента инфоблока
+ *
  * Class RandomIBlockElement
  * @package Ylab\Ddata\Data
  */
 class RandomIBlockElement extends DataUnitClass
 {
-    private static $bCheckStaticMethod = true;
-
     protected $sRandom = "Y";
+
+    /** @var array $arIBlockElements */
     protected $arIBlockElements = [];
+
+    /** @var array $arIBlocks */
     protected $arIBlocks = [];
+
+    /** @var array $arSelectedElements */
     protected $arSelectedElements = [];
 
     /**
      * RandomIBlockElement constructor.
-     * @param $sProfileID
-     * @param $sFieldCode
-     * @param $sGeneratorID
+     * @param $sProfileID - ID профиля
+     * @param $sFieldCode - Симфольный код свойства
+     * @param $sGeneratorID - ID уже сохраненного генератора
      * @throws \Bitrix\Main\ArgumentException
      * @throws \Bitrix\Main\LoaderException
      * @throws \Bitrix\Main\ObjectPropertyException
      * @throws \Bitrix\Main\SystemException
      */
-    public function __construct($sProfileID, $sFieldCode, $sGeneratorID)
+    public function __construct(string $sProfileID = '', string $sFieldCode = '', string $sGeneratorID = '')
     {
         Loader::includeModule('iblock');
-        self::$bCheckStaticMethod = false;
 
         parent::__construct($sProfileID, $sFieldCode, $sGeneratorID);
 
         $oProperty = \CIBlockProperty::GetList([], ['CODE' => $sFieldCode]);
         $arProperty = $oProperty->Fetch();
 
-        $arIblockFilter = ["ACTIVE" => "Y"];
-        $arElementFilter = ["ACTIVE" => "Y"];
+        $arIblockFilter = ['ACTIVE' => 'Y'];
+        $arElementFilter = ['ACTIVE' => 'Y'];
         if (!empty($arProperty['LINK_IBLOCK_ID']) && intval($arProperty['LINK_IBLOCK_ID']) > 0) {
             $arIblockFilter['ID'] = $arProperty['LINK_IBLOCK_ID'];
             $arElementFilter['IBLOCK_ID'] = $arProperty['LINK_IBLOCK_ID'];
@@ -83,51 +88,51 @@ class RandomIBlockElement extends DataUnitClass
     }
 
     /**
+     * Метод возврящает массив описывающий тип данных. ID, Имя, scalar type php
+     *
      * @return array
      */
-    public static function getDescription()
+    public  function getDescription()
     {
         return [
-            "ID" => "random.iblock.element.unit",
-            "NAME" => Loc::getMessage('YLAB_DDATA_DATA_IBLOCK_ELEMENT_NAME'),
-            "DESCRIPTION" => Loc::getMessage('YLAB_DDATA_DATA_IBLOCK_ELEMENT_DESCRIPTION'),
-            "TYPE" => "iblock.element",
-            "CLASS" => __CLASS__
+            'ID' => 'random.iblock.element.unit',
+            'NAME' => Loc::getMessage('YLAB_DDATA_DATA_IBLOCK_ELEMENT_NAME'),
+            'DESCRIPTION' => Loc::getMessage('YLAB_DDATA_DATA_IBLOCK_ELEMENT_DESCRIPTION'),
+            'TYPE' => 'iblock.element',
+            'CLASS' => __CLASS__
         ];
     }
 
     /**
+     * Метод возвращает html строку формы с настройкой генератора если таковые необходимы
+     *
      * @param HttpRequest $request
-     * @return mixed|string
-     * @throws \Bitrix\Main\ArgumentException
-     * @throws \Bitrix\Main\ObjectPropertyException
-     * @throws \Bitrix\Main\SystemException
+     * @return false|mixed|string
      */
-    public static function getOptionForm(HttpRequest $request)
+    public function getOptionForm(HttpRequest $request)
     {
         $arRequest = $request->toArray();
-        $arOptions = (array)$arRequest['option'];
         $sGeneratorID = $request->get('generator');
-        $sFieldID = $request->get('field');
         $sProfileID = $request->get('profile_id');
         $sPropertyName = $request->get('property-name');
 
         preg_match_all('/^(.*\[)(.*)(\])/', $sPropertyName, $matches);
         $sPropertyCode = $matches[2][0];
 
-        $arOptions = array_merge(self::getOptions($sGeneratorID, $sProfileID, $sFieldID), $arOptions);
         ob_start();
-        include Helpers::getModulePath() . "/admin/fragments/random_iblockelement_settings_form.php";
+        include Helpers::getModulePath() . '/admin/fragments/random_iblockelement_settings_form.php';
         $tpl = ob_get_contents();
         ob_end_clean();
         return $tpl;
     }
 
     /**
+     * Метод проверяет на валидность данные настройки генератора
+     *
      * @param HttpRequest $request
      * @return bool
      */
-    public static function isValidateOptions(HttpRequest $request)
+    public  function isValidateOptions(HttpRequest $request)
     {
         $arPrepareRequest = $request->get('option');
         $bFlag = false;
@@ -145,32 +150,30 @@ class RandomIBlockElement extends DataUnitClass
     }
 
     /**
+     * Возвращает случайную запись соответствующего типа
+     *
      * @return string
      * @throws \Exception
      */
     public function getValue()
     {
-        if (!self::$bCheckStaticMethod) {
-            $sRandom = $this->sRandom;
-            $arSelectedElements = $this->arSelectedElements;
-            $arIBlockElements = $this->arIBlockElements;
+        $sRandom = $this->sRandom;
+        $arSelectedElements = $this->arSelectedElements;
+        $arIBlockElements = $this->arIBlockElements;
 
-            if ($sRandom == 'Y') {
-                $arSelectedElements = array_filter($arSelectedElements);
-                if (!empty($arSelectedElements)) {
-                    $iSelectedElement = array_rand($arSelectedElements);
+        if ($sRandom == 'Y') {
+            $arSelectedElements = array_filter($arSelectedElements);
+            if (!empty($arSelectedElements)) {
+                $iSelectedElement = array_rand($arSelectedElements);
 
-                    return $arSelectedElements[$iSelectedElement];
-                } else {
-                    $iSelectedElement = array_rand($arIBlockElements);
-
-                    return $arIBlockElements[$iSelectedElement]['ID'];
-                }
+                return $arSelectedElements[$iSelectedElement];
             } else {
-                return $this->arSelectedElements[0];
+                $iSelectedElement = array_rand($arIBlockElements);
+
+                return $arIBlockElements[$iSelectedElement]['ID'];
             }
         } else {
-            throw new \Exception(Loc::getMessage('YLAB_DDATA_DATA_IBLOCK_ELEMENT_EXCEPTION_STATIC'));
+            return $this->arSelectedElements[0];
         }
     }
 }

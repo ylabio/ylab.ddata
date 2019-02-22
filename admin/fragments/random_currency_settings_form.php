@@ -1,77 +1,21 @@
 <?php
 /**
- * @global $arRequest
- * @global $arOptions
+ * @global $sGeneratorID
+ * @global $sProfileID
  * @global $sPropertyCode
+ * @global $sPropertyName
+ * @global $this
  */
 
 use Bitrix\Main\Localization\Loc;
-use Ylab\Ddata\LoadUnits;
 
 Loc::loadMessages(__FILE__);
 
-$oRequest = \Bitrix\Main\Application::getInstance()->getContext()->getRequest();
-$sEntityID = $oRequest->get('generator');
-$oClasses = new LoadUnits();
-$arClassesData = $oClasses->getDataUnits();
 
-$arEntity = [];
-foreach ($arClassesData as $arClass) {
-    if ($arClass['ID'] == $sEntityID) {
-        $arData = $arClass;
-    }
-}
-
-$oData = new $arData['CLASS']($sProfileID, $sPropertyCode, $sGeneratorID);
-$sRandom = $oData->sRandom;
-$sSelectedValue = $oData->sSelectedValue;
+$sRandom = $this->sRandom;
+$sSelectedValue = $this->sSelectedValue;
+$arCurrency = $this->getCurrency();
 ?>
-<script type='text/javascript'>
-    BX.ready(function () {
-        var inputOptions = BX.findChild(
-            BX(document),
-            {
-                attribute: {
-                    'name': '<?= $sPropertyName ?>[<?= $sGeneratorID ?>]'
-                }
-            },
-            true,
-            true
-        )[0];
-        if (inputOptions) {
-            var optionsValue = JSON.parse(inputOptions.value);
-        }
-        if (inputOptions != undefined) {
-            Object.keys(optionsValue).forEach(function (key, item) {
-
-                var optionsForm = BX.findChild(
-                    BX('WindowEntityDataForm'),
-                    {
-                        attribute: {
-                            'name': 'option[' + key + ']'
-                        }
-                    },
-                    true,
-                    true
-                )[0];
-                if (optionsForm) {
-                    optionsForm.value = optionsValue[key];
-                }
-
-                var optionsFormMultiple = BX.findChild(
-                    BX('WindowEntityDataForm'),
-                    {
-                        attribute: {
-                            'name': 'option[' + key + '][]'
-                        }
-                    },
-                    true,
-                    true
-                )[0];
-            });
-        }
-    });
-</script>
 <table class="adm-detail-content-table edit-table">
     <tbody>
     <tr>

@@ -1,78 +1,39 @@
 <?php
 /**
- * @global $arRequest
- * @global $arOptions
+ * @global $sGeneratorID
+ * @global $sProfileID
  * @global $sPropertyCode
+ * @global $sPropertyName
+ * @global $this
  */
 
 use Bitrix\Main\Localization\Loc;
-use Ylab\Ddata\LoadUnits;
+use Ylab\Ddata\Helpers;
 
 Loc::loadMessages(__FILE__);
 
-$oRequest = \Bitrix\Main\Application::getInstance()->getContext()->getRequest();
-$sEntityID = $oRequest->get('generator');
-$oClasses = new LoadUnits();
-$arClassesData = $oClasses->getDataUnits();
-
-$arEntity = [];
-foreach ($arClassesData as $arClass) {
-    if ($arClass['ID'] == $sEntityID) {
-        $arData = $arClass;
+$sMethod = $this->sMethod;
+$sServerPath = str_replace("/", "\\", $_SERVER['DOCUMENT_ROOT']);
+$sPath = str_replace($sServerPath, "", $this->sDictionaryPath);
+$sPath = str_replace("\\", "/", $sPath);
+$sFileInfo = '';
+if (!empty($this->sDictionaryPath)) {
+    $arFile = Helpers::parseFile($this->sDictionaryPath);
+    foreach ($arFile as $arFileInfo) {
+        $sFileInfo .= $arFileInfo;
     }
 }
-
-$oData = new $arData['CLASS']($sProfileID, $sPropertyCode, $sGeneratorID);
-$sMethod = $oData->sMethod;
-$sServerPath = str_replace("/", "\\", $_SERVER['DOCUMENT_ROOT']);
-$sPath = str_replace($sServerPath, "", $oData->sDictionaryPath);
-$sPath = substr($sPath, 0, -1);
-
 ?>
-<script type='text/javascript'>
-    BX.ready(function () {
-        var inputOptions = BX.findChild(
-            BX(document),
-            {
-                attribute: {
-                    'name': '<?= $sPropertyName ?>[<?= $sGeneratorID ?>]'
-                }
-            },
-            true,
-            true
-        )[0];
-        if (inputOptions) {
-            var optionsValue = JSON.parse(inputOptions.value);
-        }
-        if (inputOptions != undefined) {
-            Object.keys(optionsValue).forEach(function (key, item) {
-                var optionsForm = BX.findChild(
-                    BX('WindowEntityDataForm'),
-                    {
-                        attribute: {
-                            'name': 'option[' + key + ']'
-                        }
-                    },
-                    true,
-                    true
-                )[0];
-                if (optionsForm) {
-                    optionsForm.value = optionsValue[key];
-                }
-            });
-        }
-    });
-</script>
 <table class="adm-detail-content-table edit-table">
     <tbody>
     <tr>
         <td width="40%" class="adm-detail-content-cell-l">
-            <?= Loc::getMessage('YLAB_DDATA_DATA_DICTIONARY_CHOOSE_RANDOM') ?>
+            <?= Loc::getMessage('YLAB_DDATA_DATA_DICTIONARY_CHOOSE_TITLE') ?>
         </td>
         <td width="60%" class="adm-detail-content-cell-r">
             <select name="option[method]">
-                <option value="RANDOM" <?=$sMethod == 'RANDOM' ? 'selected' : ''?>><?= Loc::getMessage('YLAB_DDATA_DATA_DICTIONARY_CHOOSE_RANDOM') ?></option>
-                <option value="SERIALLY" <?=$sMethod == 'SERIALLY' ? 'selected' : ''?>><?= Loc::getMessage('YLAB_DDATA_DATA_DICTIONARY_CHOOSE_SERIALLY') ?></option>
+                <option value="RANDOM" <?= $sMethod == 'RANDOM' ? 'selected' : '' ?>><?= Loc::getMessage('YLAB_DDATA_DATA_DICTIONARY_CHOOSE_RANDOM') ?></option>
+                <option value="SERIALLY" <?= $sMethod == 'SERIALLY' ? 'selected' : '' ?>><?= Loc::getMessage('YLAB_DDATA_DATA_DICTIONARY_CHOOSE_SERIALLY') ?></option>
             </select>
         </td>
     </tr>
@@ -84,6 +45,12 @@ $sPath = substr($sPath, 0, -1);
             <input class="data-option" type="text" name="option[path]" id="pathFile" value="<?= $sPath ?>">
             <input type="button" title="<?= Loc::getMessage('YLAB_DDATA_DATA_DICTIONARY_BUTTON') ?>"
                    class="DataFieldButton" id="chooseFile" value="...">
+        </td>
+    </tr>
+    <tr>
+        <td width="40%" class="adm-detail-content-cell-l"></td>
+        <td width="60%" class="adm-detail-content-cell-r">
+            <textarea cols="30" rows="10" id="file-preview" disabled><?= $sFileInfo ?></textarea>
         </td>
     </tr>
     </tbody>
@@ -108,6 +75,6 @@ CAdminFileDialog::ShowScript([
     var setPathUrl = function (filename, path, site) {
         var inputPath = document.getElementById('pathFile');
         inputPath.value = path + "/" + filename;
+        window.YlabDdata.WindowEntityDataForm.PostParameters();
     }
 </script>
-

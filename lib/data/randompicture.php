@@ -10,28 +10,29 @@ use Ylab\Ddata\Helpers;
 Loc::loadMessages(__FILE__);
 
 /**
+ * Генерация случайного изображения
+ *
  * Class RandomPicture
  * @package Ylab\Ddata\Data
  */
 class RandomPicture extends DataUnitClass
 {
-    protected static $checkStaticMethod = true;
-
     protected $iWidth = 100;
+
+    /** @var int Высота изображения по умолчанию */
     protected $iHeight = 100;
 
     /**
      * RandomPicture constructor.
-     * @param $sProfileID
-     * @param $sFieldCode
-     * @param $sGeneratorID
+     * @param $sProfileID - ID профиля
+     * @param $sFieldCode - Симфольный код свойства
+     * @param $sGeneratorID - ID уже сохраненного генератора
      * @throws \Bitrix\Main\ArgumentException
      * @throws \Bitrix\Main\ObjectPropertyException
      * @throws \Bitrix\Main\SystemException
      */
-    public function __construct($sProfileID, $sFieldCode, $sGeneratorID)
+    public function __construct(string $sProfileID = '', string $sFieldCode = '', string $sGeneratorID = '')
     {
-        self::$checkStaticMethod = false;
         parent::__construct($sProfileID, $sFieldCode, $sGeneratorID);
 
         if (!empty($this->options['width'])) {
@@ -44,35 +45,32 @@ class RandomPicture extends DataUnitClass
     }
 
     /**
+     * Метод возврящает массив описывающий тип данных. ID, Имя, scalar type php
+     *
      * @return array
      */
-    public static function getDescription()
+    public  function getDescription()
     {
         return [
-            "ID" => "picture.file.unit",
-            "NAME" => Loc::getMessage("YLAB_DDATA_DATA_UNIT_PICTURE_NAME"),
-            "DESCRIPTION" => Loc::getMessage('YLAB_DDATA_DATA_UNIT_PICTURE_DESCRIPTION'),
-            "TYPE" => "file",
-            "CLASS" => __CLASS__
+            'ID' => 'picture.file.unit',
+            'NAME' => Loc::getMessage('YLAB_DDATA_DATA_UNIT_PICTURE_NAME'),
+            'DESCRIPTION' => Loc::getMessage('YLAB_DDATA_DATA_UNIT_PICTURE_DESCRIPTION'),
+            'TYPE' => 'file',
+            'CLASS' => __CLASS__
         ];
     }
 
     /**
+     * Метод возвращает html строку формы с настройкой генератора если таковые необходимы
+     *
      * @param HttpRequest $request
-     * @return mixed|string
-     * @throws \Bitrix\Main\ArgumentException
-     * @throws \Bitrix\Main\ObjectPropertyException
-     * @throws \Bitrix\Main\SystemException
+     * @return false|mixed|string
      */
-    public static function getOptionForm(HttpRequest $request)
+    public function getOptionForm(HttpRequest $request)
     {
-        $arRequest = $request->toArray();
-        $arOptions = (array)$arRequest['option'];
         $sGeneratorID = $request->get('generator');
-        $sFieldID = $request->get('field');
         $sProfileID = $request->get('profile_id');
         $sPropertyName = $request->get('property-name');
-        $arOptions = array_merge(self::getOptions($sGeneratorID, $sProfileID, $sFieldID), $arOptions);
 
         ob_start();
         include Helpers::getModulePath() . '/admin/fragments/random_picture_settings_form.php';
@@ -83,10 +81,12 @@ class RandomPicture extends DataUnitClass
     }
 
     /**
+     * Метод проверяет на валидность данные настройки генератора
+     *
      * @param HttpRequest $request
      * @return bool
      */
-    public static function isValidateOptions(HttpRequest $request)
+    public  function isValidateOptions(HttpRequest $request)
     {
         $arPrepareRequest = $request->get('option');
 
@@ -103,33 +103,31 @@ class RandomPicture extends DataUnitClass
     }
 
     /**
+     * Возвращает случайную запись соответствующего типа
+     *
      * @return string
      * @throws \Exception
      */
     public function getValue()
     {
-        if (!self::$checkStaticMethod) {
-            $iWidth = $this->iWidth;
-            $iHeight = $this->iHeight;
+        $iWidth = $this->iWidth;
+        $iHeight = $this->iHeight;
 
-            ob_start();
-            include Helpers::getModulePath() . '/admin/fragments/random_picture_image.php';
-            $image = ob_get_contents();
-            ob_end_clean();
+        ob_start();
+        include Helpers::getModulePath() . '/admin/fragments/random_picture_image.php';
+        $image = ob_get_contents();
+        ob_end_clean();
 
-            $arFile = [
-                'content' => $image,
-                'name' => 'random_picture_image.png',
-                'type' => 'image/png'
-            ];
+        $arFile = [
+            'content' => $image,
+            'name' => 'random_picture_image.png',
+            'type' => 'image/png'
+        ];
 
-            $iImageId = \CFile::SaveFile($arFile, "demo");
+        $iImageId = \CFile::SaveFile($arFile, "demo");
 
-            if ($iImageId) {
-                return \CFile::MakeFileArray($iImageId);
-            }
-        } else {
-            throw new \Exception(Loc::getMessage('YLAB_DDATA_DATA_UNIT_PICTURE_EXCEPTION_STATIC'));
+        if ($iImageId) {
+            return \CFile::MakeFileArray($iImageId);
         }
     }
 }

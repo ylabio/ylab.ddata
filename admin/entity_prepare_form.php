@@ -1,5 +1,5 @@
 <?php
-require_once($_SERVER["DOCUMENT_ROOT"] . "/bitrix/modules/main/include/prolog_admin_before.php");
+require_once $_SERVER['DOCUMENT_ROOT'] . '/bitrix/modules/main/include/prolog_admin_before.php';
 
 use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
@@ -28,8 +28,8 @@ try {
 
 if (isset($error)) {
     CAdminMessage::ShowMessage([
-        "MESSAGE" => $error,
-        "TYPE" => "ERROR",
+        'MESSAGE' => $error,
+        'TYPE' => 'ERROR',
     ]);
 }
 
@@ -39,12 +39,12 @@ if (isset($error)) {
         <tbody>
         <tr>
             <td width="40%"
-                class="adm-detail-content-cell-l"><?= Loc::getMessage("YLAB_DDATA_ENTITY_PREPARE_FORM_FIELD_ENTITY_ID") ?></td>
+                class="adm-detail-content-cell-l"><?= Loc::getMessage('YLAB_DDATA_ENTITY_PREPARE_FORM_FIELD_ENTITY_ID') ?></td>
             <td class="adm-detail-content-cell-r">
                 <select name="prepare[entity_id]" id="entity_id">
                     <option value="">-</option>
                     <? foreach ($arEntityUnits as $entityUnit): ?>
-                        <option value="<?= $entityUnit['ID'] ?>" <?= ($arPrepareRequest['entity_id'] == $entityUnit['ID'] ? "selected" : "") ?>><?= $entityUnit['NAME'] ?></option>
+                        <option value="<?= $entityUnit['ID'] ?>" <?= ($arPrepareRequest['entity_id'] == $entityUnit['ID'] ? 'selected' : '') ?>><?= $entityUnit['NAME'] ?></option>
                     <? endforeach; ?>
                 </select>
             </td>
@@ -65,11 +65,10 @@ if (isset($error)) {
             name: "savebtn",
             className: "adm-btn-save",
             action: function () {
-                window.location.replace("/bitrix/admin/ylab.ddata_entity_profile_edit.php?<?=http_build_query(['prepare'=> $arPrepareRequest]);?>")
+                window.location.replace("/bitrix/admin/ylab.ddata_entity_profile_edit.php?<?=http_build_query(['prepare' => $arPrepareRequest]);?>")
             }
         };
 
         window.YlabDdata.WindowEntityPrepareForm.SetButtons([<?=($isValidEntityPrepareForm ? "saveBtn," : "")?> BX.CDialog.prototype.btnCancel]);
     </script>
 </form>
-

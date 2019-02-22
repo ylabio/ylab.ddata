@@ -1,9 +1,9 @@
 <?php
-require_once($_SERVER["DOCUMENT_ROOT"] . "/bitrix/modules/main/include/prolog_admin_before.php");
+require_once $_SERVER['DOCUMENT_ROOT'] . '/bitrix/modules/main/include/prolog_admin_before.php';
 
 use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
-use Ylab\Ddata\Interfaces\DeleteDataClass;
+use Ylab\Ddata\DeleteDataClass;
 use Ylab\Ddata\LoadUnits;
 
 /** @var \CMain $APPLICATION */
@@ -17,7 +17,7 @@ try {
     Loc::loadMessages(LANG_ROOT);
 
     $sPostRight = $APPLICATION->GetGroupRight(MODULE_ID);
-    if ($sPostRight == "D") {
+    if ($sPostRight == 'D') {
         $APPLICATION->AuthForm(Loc::getMessage('YLAB_DDATA_ACCESS_DENIED'));
     }
 
@@ -29,7 +29,7 @@ try {
      */
     if (!empty($oRequest->get('work_start')) && $sPostRight == "W" && check_bitrix_sessid()) {
         $iCountElements = $oRequest->get('count');
-        $iDuration = intval($oRequest->get('duration'));
+        $iDuration = (int)$oRequest->get('duration');
         $iProfileIDAjax = $oRequest->get('profileID');
         $sEntityIDAjax = $oRequest->get('entityID');
 
@@ -44,9 +44,11 @@ try {
             }
         }
 
+        /**
+         * @var $oEntity \Ylab\Ddata\Interfaces\EntityUnitClass
+         */
         if (!empty($iProfileIDAjax)) {
             $oEntity = new $arEntity['CLASS']($iProfileIDAjax);
-            $oGenDataClass = new DeleteDataClass();
         }
 
         $iLastCounter = $oRequest->get('lastcounter') > 0 ? $oRequest->get('lastcounter') : 0;
@@ -58,7 +60,7 @@ try {
             $arResult = $oEntity->genUnit();
             if (empty($arResult['ERROR'])) {
                 $arNewElements[] = $arResult['NEW_ELEMENT_ID'];
-                $oGenDataClass::setGenData($iProfileIDAjax, $sEntityIDAjax, $arResult['NEW_ELEMENT_ID']);
+                $oEntity->setGenData($arResult['NEW_ELEMENT_ID']);
             } else {
                 $sErrors = $arResult['ERROR'];
             }
@@ -78,7 +80,7 @@ try {
             }
         }
 
-        echo "CurrentStatus = Array(" . $iPercent . ",'" . ($iPercent < 100 ? "&lastcounter=" . $iLastCounter : "") . "','" . $sResult . "');";
+        echo 'CurrentStatus = Array(' . $iPercent . ",'" . ($iPercent < 100 ? '&lastcounter=' . $iLastCounter : "") . "','" . $sResult . "');";
         die();
     }
 
@@ -96,31 +98,34 @@ try {
         }
     }
 
+    /**
+     * @var $oEntity \Ylab\Ddata\Interfaces\EntityUnitClass
+     */
     if (!empty($iProfileID)) {
         $oEntity = new $arEntity['CLASS']($iProfileID);
         $arProfile = $oEntity->getProfile($iProfileID);
-        $oGenDataClass = new DeleteDataClass();
-        $arGenData = $oGenDataClass::getGenData($iProfileID);
+        $arGenData = $oEntity->getGenData($iProfileID);
     }
     $arTabs = [
         [
-            "DIV" => "edit1",
-            "TAB" => Loc::getMessage('YLAB_DDATA_TAB_NAME_MAIN'),
-            "ICON" => "main_user_edit",
-            "TITLE" => Loc::getMessage('YLAB_DDATA_TAB_NAME_TITLE')
+            'DIV' => 'edit1',
+            'TAB' => Loc::getMessage('YLAB_DDATA_TAB_NAME_MAIN'),
+            'ICON' => 'main_user_edit',
+            'TITLE' => Loc::getMessage('YLAB_DDATA_TAB_NAME_TITLE')
         ]
     ];
-    $tabControl = new CAdminTabControl("tabControl", $arTabs);
+    $tabControl = new CAdminTabControl('tabControl', $arTabs);
 
     $APPLICATION->SetTitle(Loc::getMessage('YLAB_DDATA_PAGE_TITLE_ADD'));
 } catch (\Exception $e) {
     $error = $e->getMessage();
 }
-require($_SERVER["DOCUMENT_ROOT"] . "/bitrix/modules/main/include/prolog_admin_after.php");
+require $_SERVER['DOCUMENT_ROOT'] . '/bitrix/modules/main/include/prolog_admin_after.php';
+
 if (isset($error)) {
     CAdminMessage::ShowMessage([
-        "MESSAGE" => $error,
-        "TYPE" => "ERROR",
+        'MESSAGE' => $error,
+        'TYPE' => 'ERROR',
     ]);
 }
 CJSCore::Init(['WindowEntityProfileGen']);
@@ -138,7 +143,7 @@ CJSCore::Init(['WindowEntityProfileGen']);
         <input type="hidden" value="<?= $sEntityID ?>" id="entity-id">
     <? endif; ?>
     <input type="hidden"
-           value="<?= $_SERVER["PHP_SELF"] ?>?work_start=Y&lang=<?= LANGUAGE_ID ?>&<?= bitrix_sessid_get() ?>&profileID=<?= $iProfileID ?>&entityID=<?= $sEntityID ?>"
+           value="<?= $_SERVER['PHP_SELF'] ?>?work_start=Y&lang=<?= LANGUAGE_ID ?>&<?= bitrix_sessid_get() ?>&profileID=<?= $iProfileID ?>&entityID=<?= $sEntityID ?>"
            id="ajax-path">
     <?
     $tabControl->Begin();
@@ -254,4 +259,4 @@ echo '</div>';
 echo EndNote();
 ?>
 
-<? require($_SERVER["DOCUMENT_ROOT"] . "/bitrix/modules/main/include/epilog_admin.php"); ?>
+<? require $_SERVER['DOCUMENT_ROOT'] . '/bitrix/modules/main/include/epilog_admin.php'; ?>
